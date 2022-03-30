@@ -2,7 +2,13 @@
 
 ## Installation
 
-Requires Python, Lua, Go, and SuperCollider.
+Requires Python, Lua, Go.
+
+First install SuperCollider and the following extensions:
+
+- main extensions
+- MiUgens
+- PortedPlugins
 
 ```
 git clone https://github.com/schollz/raw
