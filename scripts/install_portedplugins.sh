@@ -1,0 +1,30 @@
+#! /bin/bash
+
+# Install prerequisites
+sudo apt install cmake
+
+
+# portedplugins
+git clone --recurse-submodules https://github.com/madskjeldgaard/portedplugins.git /tmp/portedplugins
+
+# Get sc source code
+git clone --recurse-submodules https://github.com/supercollider/supercollider.git /tmp/supercollider
+
+# Start build process
+INSTALL_DIR=$HOME/.local/share/SuperCollider/Extensions
+SC_DIR=/tmp/supercollider
+
+cd tmp/portedplugins
+echo "Making build directory... "
+mkdir build
+cd build
+
+echo "Starting build from $(pwd)"
+cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH="${SC_DIR}" -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+cmake --build . --config Release
+cmake --build . --config Release --target install
+
+# Clean up
+cd $HOME
+rm -rf /tmp/portedplugins
+rm -rf /tmp/supercollider
