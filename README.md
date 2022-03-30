@@ -2,9 +2,10 @@
 
 ## Installation
 
-Requires Python, Lua, and SuperCollider.
+Requires Python, Lua, Go, and SuperCollider.
 
 ```
 git clone https://github.com/schollz/raw
-sudo -H python3 -m pip install -r requirements.txt
+cd raw
+make
 ```
