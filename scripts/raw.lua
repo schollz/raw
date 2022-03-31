@@ -601,42 +601,7 @@ function run()
   end
 
   if #arg<2 or print_help then
-    print([[NAME
-   
-      dnb.lua - generative drum & bass
-   
-  DESCRIPTION
-   
-    -i, --input string
-        input filename
-   
-    --input-tempo value
-        tempo of input file (defaults to determine automatically)
-   
-    -o, --output string
-        output filename
-   
-    -b, --beats value
-        number of beats
-   
-    -t, --tempo value
-        tempo of generated beat
-   
-    --debug
-        debug mode (lots of output)
-   
-    --reverse value
-        probability of reversing (0-100%, default 10%)
-   
-    --stutter value
-        probability of stutter (0-100%, default 5%)
-   
-    --pitch value
-        probability of pitch up (0-100%, default 10%)
-   
-    --reverb value
-        probability of adding reverb tail to kick/snare (0-100%, default 2%)
-  ]])
+    print("raw.lua - see code for arguments")
   else
     if os.capture("command -v sox")=="" then
       print("need to install sox first")
