@@ -16,7 +16,6 @@ RUN cmake -DCMAKE_BUILD_TYPE=Release -DSUPERNOVA=OFF -DSC_ED=OFF -DSC_EL=OFF -DS
 RUN cmake --build . --config Release --target all -- -j3
 RUN cmake --build . --config Release --target install
 RUN ldconfig
-RUN echo /usr/local/bin/jackd -P75 -p16 -dalsa -dhw:0 -r48000 -p1024 -n3 > /root/.jackdrc
 
 
 # sc3 extensions
@@ -57,7 +56,7 @@ RUN pwd
 # build the slimmed down image
 FROM ubuntu:20.04
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev lua5.3 python3 sox 
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev lua5.3 python3 sox jackd2 python3-pip
 COPY --from=builder /usr/local/include/SuperCollider /usr/local/include/SuperCollider
 COPY --from=builder /usr/local/lib/SuperCollider /usr/local/lib/SuperCollider
 COPY --from=builder /usr/local/share/SuperCollider /usr/local/share/SuperCollider
@@ -69,4 +68,5 @@ COPY scripts/raw.lua /root/raw.lua
 COPY scripts/raw.sc /root/raw.sc
 WORKDIR /root
 RUN python3 -m pip install toml
+RUN echo /usr/bin/jackd -d dummy -r 48000 > /root/.jackdrc
 CMD ["/bin/bash"]
