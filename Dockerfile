@@ -57,7 +57,7 @@ RUN pwd
 # build the slimmed down image
 FROM ubuntu:20.04
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev lua5.3 python3
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev lua5.3 python3 sox 
 COPY --from=builder /usr/local/include/SuperCollider /usr/local/include/SuperCollider
 COPY --from=builder /usr/local/lib/SuperCollider /usr/local/lib/SuperCollider
 COPY --from=builder /usr/local/share/SuperCollider /usr/local/share/SuperCollider
@@ -68,4 +68,5 @@ COPY --from=builder /root/.local /root/.local
 COPY scripts/raw.lua /root/raw.lua
 COPY scripts/raw.sc /root/raw.sc
 WORKDIR /root
+RUN python3 -m pip install toml
 CMD ["/bin/bash"]
