@@ -1,3 +1,4 @@
+json=require("json")
 math.randomseed(os.time())
 
 SENDOSC="sendosc"
@@ -14,6 +15,15 @@ function os.file_exists(name)
     return false
   end
 end
+
+function os.read_file(file)
+  local f = io.open(file, "rb")
+    local content = f:read("*all")
+      f:close()
+        return content
+end
+
+print(json.encode(json.decode(os.read_file("config.json"))))
 
 function os.capture(cmd,raw)
   local f=assert(io.popen(cmd,'r'))
