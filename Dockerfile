@@ -66,7 +66,8 @@ COPY --from=builder /root/go/bin/sendosc /usr/local/bin/sendosc
 COPY --from=builder /root/.local /root/.local
 COPY scripts/raw.lua /root/raw.lua
 COPY scripts/raw.sc /root/raw.sc
+COPY scripts/dockerstartup.sh /root/dockerstartup.sh
 WORKDIR /root
 RUN python3 -m pip install toml
 RUN echo /usr/bin/jackd -d dummy -r 48000 > /root/.jackdrc
-CMD ["/bin/bash"]
+CMD ["/root/dockerstartup.sh"]
