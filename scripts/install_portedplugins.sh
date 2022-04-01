@@ -14,7 +14,7 @@ git clone --recurse-submodules https://github.com/supercollider/supercollider.gi
 INSTALL_DIR=$HOME/.local/share/SuperCollider/Extensions
 SC_DIR=/tmp/supercollider
 
-cd tmp/portedplugins
+cd /tmp/portedplugins
 echo "Making build directory... "
 mkdir build
 cd build

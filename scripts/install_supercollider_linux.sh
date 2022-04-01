@@ -14,5 +14,3 @@ cmake -DCMAKE_BUILD_TYPE=Release -DSUPERNOVA=OFF -DSC_ED=OFF -DSC_EL=OFF -DSC_VI
 cmake --build . --config Release --target all -- -j3
 sudo cmake --build . --config Release --target install
 sudo ldconfig
-
-echo /usr/local/bin/jackd -P75 -p16 -dalsa -dhw:0 -r44100 -p1024 -n3 > ~/.jackdrc
