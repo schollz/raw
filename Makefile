@@ -1,4 +1,10 @@
 
+build:
+	docker build -t raw . 
+
+run:
+	docker run --rm -ti raw:latest
+
 install:
 	sudo -H python3 -m pip install -r requirements.txt
 	git clone https://github.com/schollz/sendosc
