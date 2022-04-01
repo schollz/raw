@@ -1,17 +1,9 @@
 # raw
 
-## Installation
+random audio workstation.
 
-Requires Python, Lua, Go.
+like a [daw](https://en.wikipedia.org/wiki/Digital_audio_workstation) but most everything is stochastic drawn from a probability distribution you can specify.
 
-First install SuperCollider and the following extensions:
+## requirements
 
-- main extensions
-- MiUgens
-- PortedPlugins
-
-```
-git clone https://github.com/schollz/raw
-cd raw
-make
-```
+requires [`sox`](https://sourceforge.net/projects/sox/).

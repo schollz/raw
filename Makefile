@@ -1,3 +1,5 @@
+test:
+	cd src/sox && LOGGER=trace go test -v -cover 
 
 build:
 	docker build -t raw . 
