@@ -25,7 +25,11 @@ var TempPrefix = "sox"
 var TempType = "wav"
 
 func init() {
-	log.SetLevel("trace")
+	log.SetLevel("info")
+	stdout, _, _ := run("sox", "--help")
+	if !strings.Contains(stdout, "SoX") {
+		panic("need to install sox")
+	}
 }
 
 func run(args ...string) (string, string, error) {
