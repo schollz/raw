@@ -171,7 +171,7 @@ scoreFn={
                 action: {
                     Routine {
                         postln("done rendering: " ++ outFile);
-                        0.2.wait;
+                        0.15.wait;
                         NetAddr.new("localhost",oscCallbackPort).sendMsg("/quit");
                     }.play;
                 }
@@ -196,7 +196,7 @@ mainServer.waitForBoot({
             scoreFn.value(inFile,outFile,synthDefinition,durationScaling,oscCallbackPort,f1,f2,f3,f4);
             "finished".postln;
         }, '/score',recvPort:47113);
-        1.wait;
+        0.15.wait;
         "writing ready file".postln;
         File.new("/tmp/nrt-scready", "w");
         "ready".postln;
