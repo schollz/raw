@@ -1,12 +1,12 @@
 # raw
 
-random audio workstation.
+random audio workstation. wip. projected finish: april 15.
 
-like a [daw](https://en.wikipedia.org/wiki/Digital_audio_workstation) but most everything is stochastic drawn from a probability distribution you can specify.
+supposed to be like a [daw](https://en.wikipedia.org/wiki/Digital_audio_workstation) but most everything is stochastic drawn from a probability distribution.
 
 ## requirements
 
-requires [`sox`](https://sourceforge.net/projects/sox/) which you can download or (on Linux) install with `apt get sox`.
+requires `sox` which [you can download](https://sourceforge.net/projects/sox/) (or Linux: `apt get sox`).
 
 you'll also need SuperCollider+plugins:
 
@@ -15,7 +15,7 @@ you'll also need SuperCollider+plugins:
 - [SuperCollider mi-ugens](https://github.com/v7b1/mi-UGens/releases)
 - [SuperCollider ported plugins](https://github.com/madskjeldgaard/portedplugins/releases)
 
-you can pretty easily install them by source (i.e. for Raspberry Pi where binaries aren't available):
+you can click those links to download the files for your system. its also possible to install them by source (i.e. for Raspberry Pi where binaries aren't available):
 
 ```
 git clone https://github.com/schollz/raw && cd raw
