@@ -6,10 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	log "github.com/schollz/logger"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRun(t *testing.T) {
+	log.SetLevel("trace")
 	stdout, stderr, err := run("sox", "--help")
 	assert.Nil(t, err)
 	assert.True(t, strings.Contains(stdout, "SoX"))
@@ -160,10 +162,11 @@ func TestStretch(t *testing.T) {
 func TestStutter(t *testing.T) {
 	var fname2 string
 	var err error
-	fname2, err = Stutter("sample.wav", 0.15, 0.5, 5)
+	fname2, err = Stutter("sample.wav", 60.0/160/4, 0.5, 4, 0.005)
 	assert.Nil(t, err)
-	assert.Less(t, math.Abs(MustFloat(Length("sample.wav"))-MustFloat(Length(fname2))), 0.0001)
-	os.Rename(fname2, "test.wav")
+	if fname2 != "sample.wav" {
+		os.Rename(fname2, "test.wav")
+	}
 }
 
 // keep this last

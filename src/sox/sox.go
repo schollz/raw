@@ -48,7 +48,7 @@ func run(args ...string) (string, string, error) {
 	cmd.Stderr = &errb
 	err := cmd.Run()
 	if err != nil {
-		log.Errorf("%s: '%s'", strings.Join(args, " "), err.Error())
+		log.Errorf("%s -> '%s'", strings.Join(args, " "), err.Error())
 		log.Error(outb.String())
 		log.Error(errb.String())
 	}
@@ -408,30 +408,30 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 	defer os.Remove(partLast)
 
 	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partFirst,pos_start-crossfade_piece,stutter_length+crossfade_piece+crossfade_stutter))
-	_, _, err = run("sox", fname, partFirst, "trim", fmt.Sprintf("%f %f",
-		pos_start-crossfade_piece, stutter_length+crossfade_piece+crossfade_stutter))
+	_, _, err = run("sox", fname, partFirst, "trim",
+		fmt.Sprint(pos_start-crossfade_piece), fmt.Sprint(stutter_length+crossfade_piece+crossfade_stutter))
 	if err != nil {
 		log.Error(err)
 		fname2 = fname
 		return
 	}
 	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partMiddle,pos_start-crossfade_stutter,stutter_length+crossfade_stutter+crossfade_stutter))
-	_, _, err = run("sox", fname, partMiddle, "trim", fmt.Sprintf("%f %f",
-		pos_start-crossfade_stutter, stutter_length+crossfade_stutter+crossfade_stutter))
+	_, _, err = run("sox", fname, partMiddle, "trim", fmt.Sprint(pos_start-crossfade_stutter),
+		fmt.Sprint(stutter_length+crossfade_stutter+crossfade_stutter))
 	if err != nil {
 		log.Error(err)
 		fname2 = fname
 		return
 	}
 	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partLast,pos_start-crossfade_stutter,stutter_length+crossfade_piece+crossfade_stutter))
-	_, _, err = run("sox", fname, partLast, "trim", fmt.Sprintf("%f %f",
-		pos_start-crossfade_stutter, stutter_length+crossfade_piece+crossfade_stutter))
+	_, _, err = run("sox", fname, partLast, "trim", fmt.Sprint(pos_start-crossfade_stutter),
+		fmt.Sprint(stutter_length+crossfade_piece+crossfade_stutter))
 	if err != nil {
 		log.Error(err)
 		fname2 = fname
 		return
 	}
-	for i := 1.0; i < count; i++ {
+	for i := 1.0; i <= count; i++ {
 		fnameNext := ""
 		if i == 1 {
 			fnameNext, err = Gain(partFirst, gain_amt*(count-i))
