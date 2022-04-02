@@ -148,6 +148,24 @@ func TestSampleRate(t *testing.T) {
 	os.Rename(fname2, "test.wav")
 }
 
+func TestStretch(t *testing.T) {
+	var fname2 string
+	var err error
+	fname2, err = Stretch("sample.wav", 2)
+	assert.Nil(t, err)
+	assert.Less(t, math.Abs(MustFloat(Length("sample.wav"))*2-MustFloat(Length(fname2))), 0.01)
+	os.Rename(fname2, "test.wav")
+}
+
+func TestStutter(t *testing.T) {
+	var fname2 string
+	var err error
+	fname2, err = Stutter("sample.wav", 0.15, 0.5, 5)
+	assert.Nil(t, err)
+	assert.Less(t, math.Abs(MustFloat(Length("sample.wav"))-MustFloat(Length(fname2))), 0.0001)
+	os.Rename(fname2, "test.wav")
+}
+
 // keep this last
 func TestClean(t *testing.T) {
 	assert.Nil(t, Clean())

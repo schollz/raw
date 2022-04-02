@@ -49,6 +49,8 @@ func run(args ...string) (string, string, error) {
 	err := cmd.Run()
 	if err != nil {
 		log.Errorf("%s: '%s'", strings.Join(args, " "), err.Error())
+		log.Error(outb.String())
+		log.Error(errb.String())
 	}
 	return outb.String(), errb.String(), err
 }
@@ -373,38 +375,123 @@ func Gain(fname string, gain float64) (fname2 string, err error) {
 	return
 }
 
-// function audio.gain(fname,gain)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s gain %f",fname,fname2,gain))
-//   return fname2
-// end
+// Stretch does a time stretch
+func Stretch(fname string, stretch float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "stretch", fmt.Sprint(stretch))
+	return
+}
 
-// function audio.stretch(fname,stretch)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s stretch %f",fname,fname2,stretch))
-//   return fname2
-// end
+// Stutter does a stutter effect
+func Stutter(fname string, stutter_length float64, pos_start float64, count float64, xfadePieceStutterGain ...float64) (fname2 string, err error) {
+	crossfade_piece := 0.1
+	crossfade_stutter := 0.005
+	gain_amt := -2.0
+	if count > 8 {
+		gain_amt = -1.5
+	}
+	if len(xfadePieceStutterGain) > 0 {
+		crossfade_piece = xfadePieceStutterGain[0]
+	}
+	if len(xfadePieceStutterGain) > 1 {
+		crossfade_stutter = xfadePieceStutterGain[1]
+	}
+	if len(xfadePieceStutterGain) > 2 {
+		gain_amt = xfadePieceStutterGain[2]
+	}
 
-// function audio.stutter(fname,stutter_length,pos_start,count,crossfade_piece,crossfade_stutter,gain_amt)
-// 	crossfade_piece=0.1 or crossfade_piece
-// 	crossfade_stutter=0.005 or crossfade_stutter
-// 	local partFirst=string.random_filename()
-// 	local partMiddle=string.random_filename()
-// 	local partLast=string.random_filename()
-// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partFirst,pos_start-crossfade_piece,stutter_length+crossfade_piece+crossfade_stutter))
-// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partMiddle,pos_start-crossfade_stutter,stutter_length+crossfade_stutter+crossfade_stutter))
-// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partLast,pos_start-crossfade_stutter,stutter_length+crossfade_piece+crossfade_stutter))
-//   gain_amt=gain_amt or (count>8 and -1.5 or -2)
+	partFirst := tmpfile()
+	partMiddle := tmpfile()
+	partLast := tmpfile()
+	defer os.Remove(partFirst)
+	defer os.Remove(partMiddle)
+	defer os.Remove(partLast)
+
+	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partFirst,pos_start-crossfade_piece,stutter_length+crossfade_piece+crossfade_stutter))
+	_, _, err = run("sox", fname, partFirst, "trim", fmt.Sprintf("%f %f",
+		pos_start-crossfade_piece, stutter_length+crossfade_piece+crossfade_stutter))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partMiddle,pos_start-crossfade_stutter,stutter_length+crossfade_stutter+crossfade_stutter))
+	_, _, err = run("sox", fname, partMiddle, "trim", fmt.Sprintf("%f %f",
+		pos_start-crossfade_stutter, stutter_length+crossfade_stutter+crossfade_stutter))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,partLast,pos_start-crossfade_stutter,stutter_length+crossfade_piece+crossfade_stutter))
+	_, _, err = run("sox", fname, partLast, "trim", fmt.Sprintf("%f %f",
+		pos_start-crossfade_stutter, stutter_length+crossfade_piece+crossfade_stutter))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+	for i := 1.0; i < count; i++ {
+		fnameNext := ""
+		if i == 1 {
+			fnameNext, err = Gain(partFirst, gain_amt*(count-i))
+			if err != nil {
+				log.Errorf("stutter %f: %s", i, err.Error())
+				fname2 = fname
+				return
+			}
+		} else {
+			fnameNext = tmpfile()
+			if i < count {
+				defer os.Remove(fnameNext)
+			}
+			fnameMid := partLast
+			if i < count {
+				fnameMid = partMiddle
+			}
+			if gain_amt != 0 {
+				var foo string
+				foo, err = Gain(fnameMid, gain_amt*(count-i))
+				if err != nil {
+					log.Errorf("stutter %f: %s", i, err.Error())
+					fname2 = fname
+					return
+				}
+				os.Remove(fnameMid)
+				fnameMid = foo
+			}
+			var fname2Length float64
+			fname2Length, err = Length(fname2)
+			if err != nil {
+				log.Errorf("no length %f: %s", i, err.Error())
+				fname2 = fname
+				return
+			}
+
+			// os.cmd(string.format("sox %s %s %s splice %f,%f,0",fname2,fnameMid,fnameNext,audio.length(fname2),crossfade_stutter))
+			_, _, err = run("sox", fname2, fnameMid, fnameNext, "splice", fmt.Sprintf("%f,%f,0",
+				fname2Length, crossfade_stutter))
+			if err != nil {
+				log.Errorf("stutter %f: %s", i, err.Error())
+				fname2 = fname
+				return
+			}
+		}
+		fname2 = fnameNext
+	}
+	return
+}
+
 // 	for i=1,count do
 // 		local fnameNext=""
 // 		if i==1 then
 // 			fnameNext=audio.gain(partFirst,gain_amt*(count-i))
 // 		else
 // 			fnameNext=string.random_filename()
-//       local fnameMid=i<count and partMiddle or partLast
-//       if gain_amt~=0 then
-//         fnameMid=audio.gain(fnameMid,gain_amt*(count-i))
-//       end
+//          local fnameMid=i<count and partMiddle or partLast
+//          if gain_amt~=0 then
+//            fnameMid=audio.gain(fnameMid,gain_amt*(count-i))
+//          end
 // 			os.cmd(string.format("sox %s %s %s splice %f,%f,0",fname2,fnameMid,fnameNext,audio.length(fname2),crossfade_stutter))
 // 		end
 // 		fname2=fnameNext
