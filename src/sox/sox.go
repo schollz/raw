@@ -24,6 +24,12 @@ var TempPrefix = "sox"
 // TempType is the type of file to be generated (should be "wav")
 var TempType = "wav"
 
+func tmpfile() string {
+	randBytes := make([]byte, 16)
+	rand.Read(randBytes)
+	return filepath.Join(TempDir, TempPrefix+hex.EncodeToString(randBytes)+"."+TempType)
+}
+
 func init() {
 	log.SetLevel("info")
 	stdout, _, _ := run("sox", "--help")
@@ -45,12 +51,6 @@ func run(args ...string) (string, string, error) {
 		log.Errorf("%s: '%s'", strings.Join(args, " "), err.Error())
 	}
 	return outb.String(), errb.String(), err
-}
-
-func tmpfile() string {
-	randBytes := make([]byte, 16)
-	rand.Read(randBytes)
-	return filepath.Join(TempDir, TempPrefix+hex.EncodeToString(randBytes)+"."+TempType)
 }
 
 // Clean will remove files created after each function

@@ -145,7 +145,7 @@ SynthDef("kick", {
 }).load(nrtServer);
 
 scoreFn={
-    arg inFile,outFile,synthDefinition,durationScaling,oscCallbackPort,f1,f2,f3,f4;
+    arg inFile,outFile,synthDefinition,durationScaling,scDoneFile,f1,f2,f3,f4;
     Buffer.read(mainServer,inFile,action:{
         arg buf;
         Routine {
@@ -171,8 +171,10 @@ scoreFn={
                 action: {
                     Routine {
                         postln("done rendering: " ++ outFile);
+                        ["writing",scDoneFile].postln;
                         0.15.wait;
-                        NetAddr.new("localhost",oscCallbackPort).sendMsg("/quit");
+                        File.new(scDoneFile, "w");
+                        ["finished, wrote ",scDoneFile].postln;
                     }.play;
                 }
             );
@@ -187,19 +189,18 @@ mainServer.waitForBoot({
             var outFile=msg[2].asString;
             var synthDefinition=msg[3].asSymbol;
             var durationScaling=msg[4].asFloat;
-            var oscCallbackPort=msg[5].asInteger;
-            var f1=msg[6].asFloat;
-            var f2=msg[7].asFloat;
-            var f3=msg[8].asFloat;
-            var f4=msg[9].asFloat;
+            var f1=msg[5].asFloat;
+            var f2=msg[6].asFloat;
+            var f3=msg[7].asFloat;
+            var f4=msg[8].asFloat;
+            var scDoneFile=msg[9].asString;
             [msg, time, addr, recvPort].postln;
-            scoreFn.value(inFile,outFile,synthDefinition,durationScaling,oscCallbackPort,f1,f2,f3,f4);
-            "finished".postln;
+            scoreFn.value(inFile,outFile,synthDefinition,durationScaling,scDoneFile,f1,f2,f3,f4);
         }, '/score',recvPort:47113);
         0.15.wait;
         "writing ready file".postln;
         File.new("/tmp/nrt-scready", "w");
-        "ready".postln;
+        ["ready, wrote ","/tmp/nrt-scready"].postln;
     }.play;
 });
 )
