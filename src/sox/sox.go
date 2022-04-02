@@ -442,9 +442,6 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 			}
 		} else {
 			fnameNext = tmpfile()
-			if i < count {
-				defer os.Remove(fnameNext)
-			}
 			fnameMid := partLast
 			if i < count {
 				fnameMid = partMiddle
@@ -457,7 +454,6 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 					fname2 = fname
 					return
 				}
-				os.Remove(fnameMid)
 				fnameMid = foo
 			}
 			var fname2Length float64
