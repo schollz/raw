@@ -6,9 +6,9 @@ like a [daw](https://en.wikipedia.org/wiki/Digital_audio_workstation) but most e
 
 ## requirements
 
-requires [`sox`](https://sourceforge.net/projects/sox/).
+requires [`sox`](https://sourceforge.net/projects/sox/) which you can download or (on Linux) install with `apt get sox`.
 
-if you aren't using Docker, then you need to install supercollider and install all of the plugins.
+you'll also need SuperCollider+plugins:
 
 - [SuperCollider](https://supercollider.github.io/downloads)
 - [SuperCollider sc3-plugins](http://supercollider.github.io/sc3-plugins/)
@@ -18,6 +18,7 @@ if you aren't using Docker, then you need to install supercollider and install a
 you can pretty easily install them by source (i.e. for Raspberry Pi where binaries aren't available):
 
 ```
+git clone https://github.com/schollz/raw && cd raw
 sudo apt install cmake
 make supercollider
 make sc3plugins

@@ -53,6 +53,22 @@ func run(args ...string) (string, string, error) {
 	return outb.String(), errb.String(), err
 }
 
+// MustString returns only the first argument of any function, as a string
+func MustString(t ...interface{}) string {
+	if len(t) > 0 {
+		return t[0].(string)
+	}
+	return ""
+}
+
+// MustFloat returns only the first argument of any function, as a float
+func MustFloat(t ...interface{}) float64 {
+	if len(t) > 0 {
+		return t[0].(float64)
+	}
+	return 0.0
+}
+
 // Clean will remove files created after each function
 func Clean() (err error) {
 	files, err := filepath.Glob(path.Join(TempDir, TempPrefix+"*."+TempType))
@@ -69,8 +85,8 @@ func Clean() (err error) {
 	return
 }
 
-// SampleRate returns the sample rate and number of channels for file
-func SampleRate(fname string) (samplerate int, channels int, err error) {
+// Info returns the sample rate and number of channels for file
+func Info(fname string) (samplerate int, channels int, err error) {
 	stdout, stderr, err := run("sox", "--i", fname)
 	if err != nil {
 		return
@@ -113,7 +129,7 @@ func Length(fname string) (length float64, err error) {
 
 // SilenceAppend appends silence to a file
 func SilenceAppend(fname string, length float64) (fname2 string, err error) {
-	samplerate, channels, err := SampleRate(fname)
+	samplerate, channels, err := Info(fname)
 	if err != nil {
 		return
 	}
@@ -136,7 +152,7 @@ func SilenceAppend(fname string, length float64) (fname2 string, err error) {
 
 // SilencePrepend prepends silence to a file
 func SilencePrepend(fname string, length float64) (fname2 string, err error) {
-	samplerate, channels, err := SampleRate(fname)
+	samplerate, channels, err := Info(fname)
 	if err != nil {
 		return
 	}
@@ -160,158 +176,202 @@ func SilencePrepend(fname string, length float64) (fname2 string, err error) {
 func SilenceTrim(fname string) (fname2 string, err error) {
 	fname2 = tmpfile()
 	_, _, err = run("sox", fname, fname2, "silence", "1", "0.1", `0.025%`, "reverse", "silence", "1", "0.1", `0.25%`, "reverse")
-	if err != nil {
-		return
+	return
+}
+
+// Trim will trim the audio from the start point (with optional length)
+func Trim(fname string, start float64, length ...float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	if len(length) > 0 {
+		_, _, err = run("sox", fname, fname2, "trim", fmt.Sprint(start), fmt.Sprint(length[0]))
+	} else {
+		_, _, err = run("sox", fname, fname2, "trim", fmt.Sprint(start))
 	}
 	return
 }
 
-// MustString returns only the first argument of any function, as a string
-func MustString(t ...interface{}) string {
-	if len(t) > 0 {
-		return t[0].(string)
-	}
-	return ""
+// Reverse will reverse the audio
+func Reverse(fname string) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "reverse")
+	return
 }
 
-// MustFloat returns only the first argument of any function, as a float
-func MustFloat(t ...interface{}) float64 {
-	if len(t) > 0 {
-		return t[0].(float64)
-	}
-	return 0.0
+// Pitch repitched the audio
+func Pitch(fname string, notes int) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "pitch", fmt.Sprintf("%d", notes*100))
+	return
 }
 
-// TODO
+// Join will concatonate the files
+func Join(fnames ...string) (fname2 string, err error) {
+	fname2 = tmpfile()
+	fnames = append(fnames, fname2)
+	_, _, err = run(append([]string{"sox"}, fnames...)...)
+	return
+}
 
-// function audio.trim(fname,start,length)
-//   local fname2=string.random_filename()
-//   if length==nil then
-//     os.cmd("sox "..fname.." "..fname2.." trim "..start)
-//   else
-//     os.cmd("sox "..fname.." "..fname2.." trim "..start.." "..length)
-//   end
-//   return fname2
-// end
+// Repeat will add n repeats to the audio
+func Repeat(fname string, n int) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "repeat", fmt.Sprintf("%d", n))
+	return
+}
 
-// function audio.reverse(fname)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s reverse",fname,fname2))
-//   return fname2
-// end
+// RetempoSpeed will change the tempo of the audio and pitch
+func RetempoSpeed(fname string, old_tempo float64, new_tempo float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "speed", fmt.Sprint(new_tempo/old_tempo), "rate", "-v", "48k")
+	return
+}
 
-// function audio.pitch(fname,notes)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s pitch %d",fname,fname2,notes*100))
-//   return fname2
-// end
+// RetempoStretch will change the tempo of the audio trying to keep pitch similar
+func RetempoStretch(fname string, old_tempo float64, new_tempo float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "tempo", "-m", fmt.Sprint(new_tempo/old_tempo))
+	return
+}
 
-// function audio.join(fnames)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s",table.concat(fnames," "),fname2))
-//   return fname2
-// end
+// RetempoStretch will change the tempo of the audio trying to keep pitch similar
+func Slowdown(fname string, slowdown float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "tempo", "-m", fmt.Sprint(slowdown))
+	return
+}
 
-// function audio.repeat_n(fname,repeats)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s repeat %d",fname,fname2,repeats))
-//   return fname2
-// end
+func CopyPaste(fname string, startPos float64, endPos float64, pastePos float64, crossfade float64, leeway0 ...float64) (fname2 string, err error) {
+	copyLength := endPos - startPos
+	if copyLength < 0.05 {
+		fname2 = fname
+		return
+	}
+	piece := tmpfile()
+	part1 := tmpfile()
+	part2 := tmpfile()
+	splice1 := tmpfile()
+	defer os.Remove(piece)
+	defer os.Remove(part1)
+	defer os.Remove(part2)
+	defer os.Remove(splice1)
+	fname2 = tmpfile()
+	leeway := 0.0
+	if len(leeway0) > 0 {
+		leeway = leeway0[0]
+	}
+	// 	os.cmd(string.format("sox %s %s trim %f %f",fname,piece,copy_start-e,copy_length+2*e))
+	_, _, err = run("sox", fname, piece, "trim", fmt.Sprint(startPos-crossfade), fmt.Sprint(copyLength+2*crossfade))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// function audio.retempo_speed(fname,old_tempo,new_tempo)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s speed %f rate -v 48k",fname,fname2,new_tempo/old_tempo))
-//   return fname2
-// end
+	// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
+	_, _, err = run("sox", fname, part1, "trim", "0", fmt.Sprint(pastePos+crossfade))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// function audio.retempo_stretch(fname,old_tempo,new_tempo)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s tempo -m %f",fname,fname2,new_tempo/old_tempo))
-//   return fname2
-// end
+	// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_length-e))
+	_, _, err = run("sox", fname, part2, "trim", fmt.Sprint(pastePos+copyLength-crossfade))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// function audio.slowdown(fname,slowdown)
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox %s %s tempo -m %f",fname,fname2,slowdown))
-//   return fname2
-// end
+	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",part1,piece,splice1,paste_start+e,e,l))
+	_, _, err = run("sox", part1, piece, splice1, "splice", fmt.Sprintf("%f,%f,%f", pastePos+crossfade, crossfade, leeway))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// function audio.get_info(fname)
-//   local sample_rate=tonumber(os.capture("sox --i "..fname.." | grep 'Sample Rate' | awk '{print $4}'"))
-//   local channels=tonumber(os.capture("sox --i "..fname.." | grep 'Channels' | awk '{print $3}'"))
-//   return sample_rate,channels
-// end
+	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",splice1,part2,fname2,paste_start+copy_length+e,e,l))
+	_, _, err = run("sox", splice1, part2, fname2, "splice", fmt.Sprintf("%f,%f,%f", pastePos+copyLength+crossfade, crossfade, leeway))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// -- copy_and_paste2 finds best positionn, but does not keep timing
-// function audio.copy_and_paste2(fname,copy_start,copy_stop,paste_start)
-// 	local copy_length=copy_stop-copy_start
-//   if copy_length==nil or copy_length<0.05 then
-//     do return fname end
-//   end
-// 	local piece=string.random_filename()
-// 	local part1=string.random_filename()
-// 	local part2=string.random_filename()
-// 	local fname2=string.random_filename()
-// 	local e=5/1000
-// 	local l=5/1000
-// 	os.cmd(string.format("sox %s %s trim %f %f",fname,piece,copy_start-e-l,copy_stop-copy_start+e+l+e))
-// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
-// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_stop-copy_start-e-l))
-// 	os.cmd(string.format("sox %s %s %s %s splice %f %f",part1,piece,part2,fname2,paste_start+e,paste_start+e+copy_stop-copy_start+e+l+e))
-//   os.cmd(string.format("rm -f %s %s %s",part1,part2,piece))
-// 	return fname2
-// end
+	return
+}
 
-// function audio.copy_and_paste(fname,copy_start,copy_stop,paste_start,crossfade)
-// 	local copy_length=copy_stop-copy_start
-//   if copy_length==nil or copy_length<0.05 then
-//     do return fname end
-//   end
-// 	local piece=string.random_filename()
-// 	local part1=string.random_filename()
-// 	local part2=string.random_filename()
-// 	local fname2=string.random_filename()
-// 	local splice1=string.random_filename()
-// 	local e=crossfade or 0.1
-// 	local l=0 -- no leeway
-// 	os.cmd(string.format("sox %s %s trim %f %f",fname,piece,copy_start-e,copy_length+2*e))
-// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
-// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_length-e))
-// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",part1,piece,splice1,paste_start+e,e,l))
-// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",splice1,part2,fname2,paste_start+copy_length+e,e,l))
-//   os.cmd(string.format("rm -f %s %s %s %s",piece,part1,part2,splice1))
-// 	return fname2
-// end
+// Paste pastes any piece into a place in the audio, assumes that the piece has "crossfade" length on both sides
+// in addition to its current length.
+func Paste(fname string, piece string, pasteStart float64, crossfade float64) (fname2 string, err error) {
+	copyLength, err := Length(piece)
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+	part1 := tmpfile()
+	part2 := tmpfile()
+	splice1 := tmpfile()
+	defer os.Remove(part1)
+	defer os.Remove(part2)
+	defer os.Remove(splice1)
+	fname2 = tmpfile()
+	leeway := 0.0
 
-// -- pastes any piece into a place in the audio
-// -- assumes that the piece has "crossfade" length on both sides
-// -- in addition to its current length
-// function audio.paste(fname,piece,paste_start,crossfade)
-// 	local copy_length=audio.length(piece)
-//   if copy_length==nil then
-//     do return fname end
-//   end
-// 	local part1=string.random_filename()
-// 	local part2=string.random_filename()
-// 	local fname2=string.random_filename()
-// 	local splice1=string.random_filename()
-// 	local e=crossfade or 0.1
-// 	local l=0 -- no leeway
-// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
-// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_length-e*3))
-// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",part1,piece,splice1,paste_start+e,e,l))
-// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",splice1,part2,fname2,paste_start+copy_length+e,e,l))
-//   os.cmd(string.format("rm -f %s %s %s",part1,part2,splice1))
-// 	return fname2
-// end
+	// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
+	_, _, err = run("sox", fname, part1, "trim", "0", fmt.Sprint(pasteStart+crossfade))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
 
-// function audio.sample_rate(fname,sr,ch)
-//   sr=sr or 48000
-//   ch=ch or 2
-//   local fname2=string.random_filename()
-//   os.cmd(string.format("sox -r %d %s %s",sr,fname,fname2))
-//   return fname2
-// end
+	// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_length-e*3))
+	_, _, err = run("sox", fname, part2, "trim", fmt.Sprint(pasteStart+copyLength-crossfade*3))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+
+	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",part1,piece,splice1,paste_start+e,e,l))
+	_, _, err = run("sox", part1, piece, splice1, "splice", fmt.Sprintf("%f,%f,%f", pasteStart+crossfade, crossfade, leeway))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+
+	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",splice1,part2,fname2,paste_start+copy_length+e,e,l))
+	_, _, err = run("sox", splice1, part2, fname2, "splice", fmt.Sprintf("%f,%f,%f", pasteStart+copyLength+crossfade, crossfade, leeway))
+	if err != nil {
+		log.Error(err)
+		fname2 = fname
+		return
+	}
+
+	return
+}
+
+// SampleRate changes the sample rate
+func SampleRate(fname string, srCh ...int) (fname2 string, err error) {
+	sampleRate := int(48000)
+	if len(srCh) > 0 {
+		sampleRate = srCh[0]
+	}
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "rate", fmt.Sprint(sampleRate))
+	return
+}
+
+// Gain applies gain
+func Gain(fname string, gain float64) (fname2 string, err error) {
+	fname2 = tmpfile()
+	_, _, err = run("sox", fname, fname2, "gain", fmt.Sprint(gain))
+	return
+}
 
 // function audio.gain(fname,gain)
 //   local fname2=string.random_filename()
