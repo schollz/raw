@@ -1,5 +1,7 @@
 # raw
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/schollz/raw.svg)](https://pkg.go.dev/github.com/schollz/raw)
+
 random audio workstation. wip. projected finish: april 15.
 
 supposed to be like a [daw](https://en.wikipedia.org/wiki/Digital_audio_workstation) but most everything is stochastic drawn from a probability distribution.
