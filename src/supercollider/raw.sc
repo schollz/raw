@@ -95,6 +95,20 @@ SynthDef("bitcrush", {
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
     Out.ar(out, snd);
 }).load(nrtServer);
+SynthDef("oneworddelay", {
+    arg out=0, dur=30,f1=120,f2=1,f3,f4;
+    arg out=0,  dur=30, f1,f2,f3,f4;
+    var duration=BufDur.ir(0);
+    var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
+    var gate,sndDelay;
+    var bpm=f1;
+    gate=Lag.ar(DetectSilence.ar(snd,amp:0.01,time:0.05,doneAction:0),0.1);
+    sndDelay=CombC.ar(snd,2.0,60/bpm*2,5)*0.5;
+    sndDelay=Pan2.ar(sndDelay,SinOsc.kr(60/bpm*2));
+    snd=SelectX.ar(gate,[snd,sndDelay]);
+    snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.0005,dur-0.001,0.0005]), doneAction:2);
+    Out.ar(out, snd);
+}).load(nrtServer);
 SynthDef("sidechain", {
     arg out=0,  dur=30,f1=1,f2=1,f3,f4;
     var duration=BufDur.ir(0);
