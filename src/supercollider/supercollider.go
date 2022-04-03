@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	mathr "math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -111,7 +112,11 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 	fname2 = tmpfile()
 	durationScaling := "1"
 	if effect == "reverberate" {
-		durationScaling = "2"
+		if mathr.Float64() < 0.5 {
+			durationScaling = "2"
+		} else {
+			durationScaling = "2.5"
+		}
 	}
 	scDoneFile := filepath.FromSlash(tmpfile())
 	scDoneFile = strings.Replace(scDoneFile, `\`, `\\`, -1)
@@ -146,7 +151,7 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 }
 
 func blockUntilReady() {
-	start()
+	Start()
 	if ready {
 		return
 	}
@@ -158,7 +163,7 @@ func blockUntilReady() {
 	}
 }
 
-func start() (err error) {
+func Start() (err error) {
 	if starting {
 		return
 	}
@@ -217,6 +222,10 @@ func Stop() (err error) {
 			log.Error(err)
 		}
 		err = killProcess("scsynth")
+		if err != nil {
+			log.Error(err)
+		}
+		err = killProcess("sclang")
 		if err != nil {
 			log.Error(err)
 		}

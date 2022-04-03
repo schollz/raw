@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/schollz/logger"
 	"github.com/schollz/progressbar/v3"
@@ -15,39 +16,46 @@ import (
 )
 
 type SampSwap struct {
-	DebugLevel    string
-	Seed          int64
-	FileIn        string
-	FileOut       string
-	FileOriginal  string
-	TempoIn       float64
-	TempoOut      float64
-	TempoEstimate float64
-	BeatsIn       float64
-	BeatsOut      float64
-	ProbStutter   float64
-	ProbReverse   float64
-	ProbSlow      float64
-	ProbJump      float64
-	ProbPitch     float64
-	ProbReverb    float64
-	ProbRereverb  float64
-	Tapedeck      bool
-	FilterIn      float64
-	FilterOut     float64
-	RetempoSwitch int // 0-none,1=speed,2=stretch
+	DebugLevel     string
+	Seed           int64
+	FileIn         string
+	FileOut        string
+	FileOriginal   string
+	TempoIn        float64
+	TempoOut       float64
+	BeatsIn        float64
+	BeatsOut       float64
+	ProbStutter    float64
+	ProbReverse    float64
+	ProbSlow       float64
+	ProbJump       float64
+	ProbPitch      float64
+	ProbReverb     float64
+	ProbRereverb   float64
+	Tapedeck       bool
+	FilterIn       float64
+	FilterOut      float64
+	ReTempoNone    bool
+	ReTempoStretch bool
+	ReTempoSpeed   bool
 }
 
 func Init() (ss *SampSwap) {
 	return &SampSwap{
-		RetempoSwitch: 1,
+		ReTempoStretch: true,
 	}
 }
 
 func (ss *SampSwap) Run() (err error) {
-	log.SetLevel(ss.DebugLevel)
+	if ss.DebugLevel != "" {
+		log.SetLevel(ss.DebugLevel)
+	}
+	if ss.Seed == 0 {
+		ss.Seed = time.Now().UnixNano()
+	}
 	rand.Seed(ss.Seed)
 	var fname string
+	defer supercollider.Stop()
 
 	// convert to 48000
 	fname, err = sox.SampleRate(ss.FileIn, 48000)
@@ -74,6 +82,17 @@ func (ss *SampSwap) Run() (err error) {
 	if ss.TempoOut == 0 {
 		ss.TempoOut = ss.TempoIn
 	}
+	// TOOD: make optional
+	// find closest multiple of tempoout to tempoin
+	foodiff := 1000000.0
+	for _, bpm := range []float64{ss.TempoOut / 8, ss.TempoOut / 4, ss.TempoOut / 2, ss.TempoOut, ss.TempoOut * 2, ss.TempoOut * 4, ss.TempoOut * 8} {
+		if math.Abs(bpm-ss.TempoIn) < foodiff {
+			foodiff = math.Abs(bpm - ss.TempoIn)
+			ss.TempoOut = bpm
+		}
+	}
+	log.Infof("tempo in: %f bpm", ss.TempoIn)
+	log.Infof("tempo out: %f bpm", ss.TempoOut)
 
 	// determine average number of beats
 	ss.BeatsIn = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
@@ -115,26 +134,86 @@ func (ss *SampSwap) Run() (err error) {
 	ss.FileOriginal = fname
 
 	total := ss.BeatsIn * (ss.ProbPitch + ss.ProbJump +
-		ss.ProbReverse + ss.ProbStutter)
+		ss.ProbReverse + ss.ProbStutter + ss.ProbRereverb + 2)
 	bar := progressbar.Default(int64(total))
 	for i := 0.0; i < ss.BeatsIn*ss.ProbPitch; i++ {
-		bar.Add(1)
 		fname = ss.pitch(fname)
+		bar.Add(1)
 	}
 	for i := 0.0; i < ss.BeatsIn*ss.ProbJump; i++ {
-		bar.Add(1)
 		fname = ss.jump(fname)
+		bar.Add(1)
 	}
 	for i := 0.0; i < ss.BeatsIn*ss.ProbReverse; i++ {
-		bar.Add(1)
 		fname = ss.reverse(fname)
+		bar.Add(1)
+	}
+	for i := 0.0; i < ss.BeatsIn*ss.ProbRereverb; i++ {
+		fname = ss.rereverb(fname)
+		bar.Add(1)
 	}
 	for i := 0.0; i < ss.BeatsIn*ss.ProbStutter; i++ {
-		bar.Add(1)
 		fname = ss.stutter(fname)
+		bar.Add(1)
 	}
 
+	// retempo
+	if ss.ReTempoSpeed {
+		fname, err = sox.RetempoSpeed(fname, ss.TempoIn, ss.TempoOut)
+	} else if ss.ReTempoStretch {
+		fname, err = sox.RetempoStretch(fname, ss.TempoIn, ss.TempoOut)
+	}
+	if err != nil {
+		return
+	}
+
+	fname, err = supercollider.Effect(fname, "filter_in_out",
+		ss.FilterIn*60/ss.TempoIn, ss.FilterOut*60/ss.TempoOut)
+	if err != nil {
+		return
+	}
+	bar.Add(1)
+
+	if ss.Tapedeck {
+		fname, err = supercollider.Effect(fname, "tapedeck")
+		if err != nil {
+			return
+		}
+	}
+	bar.Add(1)
+
 	err = os.Rename(fname, ss.FileOut)
+	return
+}
+
+func (ss *SampSwap) rereverb(fname string) (fname2 string) {
+	var err error
+	fname2 = fname
+	length_beat := randF(1, 4)
+	start_beat := randF(3, ss.BeatsIn-length_beat-1)
+	paste_beat := randF(2, 2*(ss.BeatsIn-length_beat))
+	crossfade := 0.05
+
+	piece, err := sox.Trim(ss.FileOriginal, 60/ss.TempoIn*start_beat-crossfade,
+		60/ss.TempoIn/4*length_beat+crossfade*2)
+	if err != nil {
+		return
+	}
+	// add reverberate to it
+	piece, err = supercollider.Effect(piece, "reverberate")
+	if err != nil {
+		return
+	}
+	// reverse it
+	piece, err = sox.Reverse(piece)
+	if err != nil {
+		return
+	}
+	// paste it
+	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn/2*paste_beat, crossfade)
+	if err == nil {
+		fname2 = fname
+	}
 	return
 }
 
