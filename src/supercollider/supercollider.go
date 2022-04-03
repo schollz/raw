@@ -90,19 +90,6 @@ func init() {
 	}
 }
 
-func blockUntilReady() {
-	start()
-	if ready {
-		return
-	}
-	for {
-		if ready {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-}
-
 func scPath(f string) string {
 	fabs, _ := filepath.Abs(f)
 	fabs = filepath.FromSlash(fabs)
@@ -156,6 +143,19 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 	}
 
 	return
+}
+
+func blockUntilReady() {
+	start()
+	if ready {
+		return
+	}
+	for {
+		if ready {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func start() (err error) {
@@ -225,12 +225,12 @@ func Stop() (err error) {
 		os.Remove(sccodeFile)
 	}
 	os.Remove(READYFILE)
-	err = Clean()
+	err = clean()
 	return
 }
 
 // Clean will remove files created after each function
-func Clean() (err error) {
+func clean() (err error) {
 	files, err := filepath.Glob(path.Join(TempDir, TempPrefix+"*."+TempType))
 	if err != nil {
 		return err
