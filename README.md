@@ -39,3 +39,42 @@ make sc3plugins
 make miugens
 make portedplugins
 ```
+
+
+### sampswap units
+
+`chords.toml`:
+
+```toml
+# map[string]*sampswap.SampSwap
+
+[A]
+FileIn = ""
+FilterIn = 0.0
+FilterOut = 0.0
+ProbJump = 0.0
+ProbPitch = 0.0
+ProbRereverb = 0.0
+ProbReverb = 0.0
+ProbReverse = 0.0
+ProbSlow = 0.0
+ProbStutter = 0.1
+ReTempoSpeed = false
+Sidechain = 0.0
+Tapedeck = false
+
+[B]
+FileIn = ""
+FilterIn = 0.0
+FilterOut = 0.0
+ProbJump = 0.0
+ProbPitch = 0.0
+ProbRereverb = 0.0
+ProbReverb = 0.0
+ProbReverse = 0.0
+ProbSlow = 0.0
+ProbStutter = 0.1
+ReTempoSpeed = false
+Sidechain = 0.0
+Tapedeck = false
+```

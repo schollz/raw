@@ -1,12 +1,12 @@
 package song
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
 
+	"github.com/pelletier/go-toml"
 	log "github.com/schollz/logger"
 	"github.com/schollz/raw/src/sampswap"
 )
@@ -43,8 +43,10 @@ func (s *Song) Generate() (err error) {
 		s.Tracks[i].StructureArray = strings.Split(track.Structure, "")
 		log.Tracef("track%d: %v", i, s.Tracks[i].StructureArray)
 		s.Tracks[i].Parts = []Part{}
+		s.Tracks[i].PartSampswap = make(map[string]*sampswap.SampSwap)
 		for j, name := range s.Tracks[i].StructureArray {
 			p := Part{Name: name, Start: math.Round(s.Bars * float64(j) / float64(len(s.Tracks[i].StructureArray)))}
+			s.Tracks[i].PartSampswap[name] = &sampswap.SampSwap{ProbStutter: 0.1}
 			log.Debugf("part: %v", p)
 			s.Tracks[i].Parts = append(s.Tracks[i].Parts, p)
 		}
@@ -70,7 +72,8 @@ func (s *Song) Generate() (err error) {
 			s.Tracks[i].Parts[j].Length = nextStart - part.Start
 		}
 	}
-	b, _ := json.MarshalIndent(s, " ", " ")
+	// b, _ := json.MarshalIndent(s, " ", " ")
+	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))
 	return
 }
