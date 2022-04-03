@@ -97,7 +97,6 @@ SynthDef("bitcrush", {
 }).load(nrtServer);
 SynthDef("oneworddelay", {
     arg out=0, dur=30,f1=120,f2=1,f3,f4;
-    arg out=0,  dur=30, f1,f2,f3,f4;
     var duration=BufDur.ir(0);
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     var gate,sndDelay;

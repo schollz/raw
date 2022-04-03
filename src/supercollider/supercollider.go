@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hypebeast/go-osc/osc"
@@ -29,7 +30,9 @@ var sclangFolder = "."
 var sccodeFile = ""
 var cmdSuperCollider *exec.Cmd
 var ready = false
+var starting = false
 var READYFILE = ""
+var mu sync.Mutex
 
 // TempDir is where the temporary intermediate files are held
 var TempDir = os.TempDir()
@@ -85,10 +88,10 @@ func init() {
 			panic("scsynth already running, exit first")
 		}
 	}
-
 }
 
 func blockUntilReady() {
+	start()
 	if ready {
 		return
 	}
@@ -109,6 +112,9 @@ func scPath(f string) string {
 
 func Effect(fname string, effect string, fs ...float64) (fname2 string, err error) {
 	blockUntilReady()
+	log.Trace("getting lock")
+	mu.Lock()
+	defer mu.Unlock()
 	effectF := []float64{0, 0, 0, 0}
 	for i, f := range fs {
 		if i < 4 {
@@ -151,7 +157,12 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 
 	return
 }
-func Start() (err error) {
+
+func start() (err error) {
+	if starting {
+		return
+	}
+	starting = true
 	go func() {
 		f, _ := ioutil.TempFile(os.TempDir(), "sccode")
 		f.WriteString(sclangCode)
@@ -184,6 +195,7 @@ func Start() (err error) {
 		}()
 	}()
 	go func() {
+		log.Trace("watching for ready signal")
 		for {
 			// check whether the "ready" file exists from the sclang server
 			if _, err := os.Stat(READYFILE); err == nil {
