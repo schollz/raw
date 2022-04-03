@@ -9,10 +9,14 @@ import (
 	"strings"
 
 	log "github.com/schollz/logger"
+	"github.com/schollz/progressbar/v3"
 	"github.com/schollz/raw/src/sox"
+	"github.com/schollz/raw/src/supercollider"
 )
 
 type SampSwap struct {
+	DebugLevel    string
+	Seed          int64
 	FileIn        string
 	FileOut       string
 	FileOriginal  string
@@ -41,6 +45,8 @@ func Init() (ss *SampSwap) {
 }
 
 func (ss *SampSwap) Run() (err error) {
+	log.SetLevel(ss.DebugLevel)
+	rand.Seed(ss.Seed)
 	var fname string
 
 	// convert to 48000
@@ -106,15 +112,84 @@ func (ss *SampSwap) Run() (err error) {
 	if err != nil {
 		return
 	}
+	ss.FileOriginal = fname
 
+	total := ss.BeatsIn * (ss.ProbPitch + ss.ProbJump +
+		ss.ProbReverse + ss.ProbStutter)
+	bar := progressbar.Default(int64(total))
 	for i := 0.0; i < ss.BeatsIn*ss.ProbPitch; i++ {
+		bar.Add(1)
 		fname = ss.pitch(fname)
 	}
 	for i := 0.0; i < ss.BeatsIn*ss.ProbJump; i++ {
+		bar.Add(1)
 		fname = ss.jump(fname)
+	}
+	for i := 0.0; i < ss.BeatsIn*ss.ProbReverse; i++ {
+		bar.Add(1)
+		fname = ss.reverse(fname)
+	}
+	for i := 0.0; i < ss.BeatsIn*ss.ProbStutter; i++ {
+		bar.Add(1)
+		fname = ss.stutter(fname)
 	}
 
 	err = os.Rename(fname, ss.FileOut)
+	return
+}
+
+func (ss *SampSwap) stutter(fname string) (fname2 string) {
+	var err error
+	fname2 = fname
+	start_beat := randF(1, ss.BeatsIn-4)
+	stutters := randF(1, 3) * 4
+	paste_beat := randF(12, ss.BeatsIn*4-16)
+	crossfade := 0.05
+	// do the stuter
+	piece, err := sox.Stutter(ss.FileOriginal, 60/ss.TempoIn/4,
+		60/ss.TempoIn*start_beat, stutters, crossfade, 0.001)
+	if err != nil {
+		return
+	}
+	// add lpf ramp to it
+	piece, err = supercollider.Effect(piece, "lpf_rampup")
+	if err != nil {
+		return
+	}
+	// paste it
+	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn/4*paste_beat, crossfade)
+	if err == nil {
+		fname2 = fname
+	}
+	return
+}
+
+func (ss *SampSwap) reverse(fname string) (fname2 string) {
+	var err error
+	fname2 = fname
+	length_beat := randF(1, 5) / 2
+	start_beat := randF(1, ss.BeatsIn-length_beat)
+	paste_beat := randF(1, ss.BeatsIn-length_beat)
+	crossfade := 0.05
+
+	// grab a piece
+	piece, err := sox.Trim(fname, 60/ss.TempoIn*start_beat-crossfade,
+		60/ss.TempoIn*(length_beat)+2*crossfade)
+	if err != nil {
+		return
+	}
+
+	// reverse it
+	piece, err = sox.Reverse(piece)
+	if err != nil {
+		return
+	}
+
+	// paste it
+	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn*paste_beat, crossfade)
+	if err == nil {
+		fname2 = fname
+	}
 	return
 }
 
