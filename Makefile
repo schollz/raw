@@ -1,11 +1,12 @@
+
 test:
-	cd src/sox && LOGGER=trace go test -v -cover 
+	LOGGER=debug go test -v -cover ./...
 
-build:
-	docker build -t raw . 
-
-run:
+docker-run:
 	docker run --rm -ti raw:latest
+
+docker-build:
+	docker build -t raw . 
 
 install:
 	sudo -H python3 -m pip install -r requirements.txt

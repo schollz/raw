@@ -16,34 +16,32 @@ import (
 )
 
 type SampSwap struct {
-	DebugLevel     string
-	Seed           int64
-	FileIn         string
-	FileOut        string
-	FileOriginal   string
-	TempoIn        float64
-	TempoOut       float64
-	BeatsIn        float64
-	BeatsOut       float64
-	ProbStutter    float64
-	ProbReverse    float64
-	ProbSlow       float64
-	ProbJump       float64
-	ProbPitch      float64
-	ProbReverb     float64
-	ProbRereverb   float64
-	Tapedeck       bool
-	FilterIn       float64
-	FilterOut      float64
-	ReTempoNone    bool
-	ReTempoStretch bool
-	ReTempoSpeed   bool
+	DebugLevel   string
+	Seed         int64
+	FileIn       string
+	FileOut      string
+	FileOriginal string
+	TempoIn      float64
+	TempoOut     float64
+	BeatsIn      float64
+	BeatsOut     float64
+	ProbStutter  float64
+	ProbReverse  float64
+	ProbSlow     float64
+	ProbJump     float64
+	ProbPitch    float64
+	ProbReverb   float64
+	ProbRereverb float64
+	Sidechain    float64
+	Tapedeck     bool
+	FilterIn     float64
+	FilterOut    float64
+	ReTempoNone  bool // ignores retempoing
+	ReTempoSpeed bool // ignores pitch
 }
 
 func Init() (ss *SampSwap) {
-	return &SampSwap{
-		ReTempoStretch: true,
-	}
+	return &SampSwap{}
 }
 
 func (ss *SampSwap) Run() (err error) {
@@ -161,17 +159,20 @@ func (ss *SampSwap) Run() (err error) {
 	// retempo
 	if ss.ReTempoSpeed {
 		fname, err = sox.RetempoSpeed(fname, ss.TempoIn, ss.TempoOut)
-	} else if ss.ReTempoStretch {
+	} else if ss.ReTempoNone {
+	} else {
 		fname, err = sox.RetempoStretch(fname, ss.TempoIn, ss.TempoOut)
 	}
 	if err != nil {
 		return
 	}
 
-	// fname, err = supercollider.Effect(fname, "kick", ss.BeatsOut/4, 1, ss.TempoIn)
-	// if err != nil {
-	// 	return
-	// }
+	if ss.Sidechain > 0 {
+		fname, err = supercollider.Effect(fname, "sidechain", ss.BeatsOut/ss.Sidechain, 1, ss.TempoIn)
+		if err != nil {
+			return
+		}
+	}
 
 	if ss.FilterIn > 0 || ss.FilterOut > 0 {
 		fname, err = supercollider.Effect(fname, "filter_in_out",

@@ -195,7 +195,7 @@ func Start() (err error) {
 			scanner := bufio.NewScanner(stdout)
 			for scanner.Scan() {
 				m := scanner.Text()
-				log.Debugf("%s", m)
+				log.Tracef("%s", m)
 			}
 		}()
 	}()

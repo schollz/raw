@@ -1,7 +1,6 @@
 package sampswap
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -42,9 +41,14 @@ func App() (err error) {
 				Name:        "beats",
 				Usage:       "number of beats to render",
 				Value:       16,
-				Destination: &ss.BeatsIn,
+				Destination: &ss.BeatsOut,
 			},
-
+			&cli.Float64Flag{
+				Name:        "jump",
+				Usage:       "probability for jump",
+				Value:       0,
+				Destination: &ss.ProbJump,
+			},
 			&cli.Float64Flag{
 				Name:        "stutter",
 				Usage:       "probability for stutter",
@@ -63,10 +67,42 @@ func App() (err error) {
 				Value:       0,
 				Destination: &ss.ProbRereverb,
 			},
+			&cli.Float64Flag{
+				Name:        "filter-in",
+				Usage:       "beats for filter ramp up at start",
+				Value:       0,
+				Destination: &ss.FilterIn,
+			},
+			&cli.Float64Flag{
+				Name:        "filter-out",
+				Usage:       "beats for filter ramp down at end",
+				Value:       0,
+				Destination: &ss.FilterOut,
+			},
+			&cli.Float64Flag{
+				Name:        "sidechain",
+				Usage:       "add sidechain every X beats",
+				Value:       0,
+				Destination: &ss.Sidechain,
+			},
+			&cli.BoolFlag{
+				Name:        "tapedeck",
+				Usage:       "process final output with tape emulator",
+				Destination: &ss.Tapedeck,
+			},
+			&cli.BoolFlag{
+				Name:        "tempo-ignore-pitch",
+				Usage:       "ignores pitch when re-tempoing",
+				Destination: &ss.ReTempoSpeed,
+			},
+			&cli.BoolFlag{
+				Name:        "tempo-ignore-all",
+				Usage:       "ignores re-tempoing",
+				Destination: &ss.ReTempoNone,
+			},
 		},
 		Action: func(c *cli.Context) error {
-			fmt.Printf("%+v", ss)
-			return nil
+			return ss.Run()
 		},
 	}
 
