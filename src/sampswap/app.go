@@ -10,6 +10,9 @@ import (
 func App() (err error) {
 	ss := Init()
 	app := &cli.App{
+		Name:    "raw",
+		Version: "v0.0.1",
+		Usage:   "random audio workstation",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Required:    true,
