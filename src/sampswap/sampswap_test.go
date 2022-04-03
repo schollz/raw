@@ -22,17 +22,18 @@ func TestRunApp(t *testing.T) {
 	ss := Init()
 	// ss.Seed = 18
 	// ss.DebugLevel = ""
+	ss.FileIn = "../sox/sample.wav"
 	ss.FileIn = "175-16-104.wav"
 	ss.FileOut = "test.wav"
 	ss.BeatsOut = 32
-	// ss.ProbJump = 0.1
-	// ss.ProbReverse = 0.1
-	// ss.ProbStutter = 0.1
-	// ss.ProbRereverb = 0.2
+	ss.ProbJump = 0.1
+	ss.ProbReverse = 0.1
+	ss.ProbStutter = 0.1
+	ss.ProbRereverb = 0.2
 	ss.Tapedeck = true
 	ss.FilterIn = 4
 	ss.FilterOut = 8
-	ss.TempoOut = 60
+	ss.TempoOut = 160
 	ss.ReTempoStretch = true
 	assert.Nil(t, ss.Run())
 	fmt.Printf("ss: %+v\n", ss)

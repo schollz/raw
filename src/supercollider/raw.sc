@@ -111,7 +111,7 @@ SynthDef("oneworddelay", {
 SynthDef("sidechain", {
     arg out=0,  dur=30,f1=1,f2=1,f3,f4;
     var duration=BufDur.ir(0);
-    var bcimp=Dust.kr(f1/duration); // times per song
+    var bcimp=Impulse.kr(f1/duration); // times per song
     var timescale=f2*TChoose.kr(bcimp,[0.5,0.75,1,1.25,1.5,1.75]);
     var bctrig=Trig.kr(bcimp,timescale/2);
     var bc=EnvGen.kr(Env.asr(timescale/2,1,timescale/2,[TChoose.kr(bcimp,[-1,-2,-4,-8]),TChoose.kr(bcimp,[2,4,8,16])]),bctrig);
@@ -140,7 +140,7 @@ SynthDef("kick", {
     var bctrig=Trig.kr(bcimp,timescale/2);
     var bc=EnvGen.kr(Env.asr(timescale/2,1,timescale/2,[TChoose.kr(bcimp,[-1,-2,-4,-8]),TChoose.kr(bcimp,[2,4,8,16])]),bctrig);
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
-    var qntrig=Impulse.kr(f3/60); // f3 = bpm
+    var qntrig=Impulse.kr(f1/duration); // f3 = bpm
     var kick=MiPlaits.ar(
         pitch:28,
         harm:SinOsc.kr(Rand(0,1),Rand(0,3)).range(0.4,0.6),

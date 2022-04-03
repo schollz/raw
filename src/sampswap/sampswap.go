@@ -113,16 +113,16 @@ func (ss *SampSwap) Run() (err error) {
 	}
 
 	// add repeats until we reach the number of wanted beats
-	ss.BeatsIn = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
+	beats := math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
 	for {
-		if ss.BeatsIn >= ss.BeatsOut {
+		if beats >= ss.BeatsOut {
 			break
 		}
 		fname, err = sox.Repeat(fname, 1)
 		if err != nil {
 			return
 		}
-		ss.BeatsIn = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
+		beats = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
 	}
 
 	// trim off excess beats
@@ -131,28 +131,29 @@ func (ss *SampSwap) Run() (err error) {
 	if err != nil {
 		return
 	}
+	log.Infof("beats: %f", ss.BeatsOut)
 	ss.FileOriginal = fname
 
-	total := ss.BeatsIn * (ss.ProbPitch + ss.ProbJump +
-		ss.ProbReverse + ss.ProbStutter + ss.ProbRereverb + 2)
+	total := 2 + ss.BeatsOut*(ss.ProbPitch+ss.ProbJump+
+		ss.ProbReverse+ss.ProbStutter+ss.ProbRereverb)
 	bar := progressbar.Default(int64(total))
-	for i := 0.0; i < ss.BeatsIn*ss.ProbPitch; i++ {
+	for i := 0.0; i < ss.BeatsOut*ss.ProbPitch; i++ {
 		fname = ss.pitch(fname)
 		bar.Add(1)
 	}
-	for i := 0.0; i < ss.BeatsIn*ss.ProbJump; i++ {
+	for i := 0.0; i < ss.BeatsOut*ss.ProbJump; i++ {
 		fname = ss.jump(fname)
 		bar.Add(1)
 	}
-	for i := 0.0; i < ss.BeatsIn*ss.ProbReverse; i++ {
+	for i := 0.0; i < ss.BeatsOut*ss.ProbReverse; i++ {
 		fname = ss.reverse(fname)
 		bar.Add(1)
 	}
-	for i := 0.0; i < ss.BeatsIn*ss.ProbRereverb; i++ {
+	for i := 0.0; i < ss.BeatsOut*ss.ProbRereverb; i++ {
 		fname = ss.rereverb(fname)
 		bar.Add(1)
 	}
-	for i := 0.0; i < ss.BeatsIn*ss.ProbStutter; i++ {
+	for i := 0.0; i < ss.BeatsOut*ss.ProbStutter; i++ {
 		fname = ss.stutter(fname)
 		bar.Add(1)
 	}
@@ -167,10 +168,17 @@ func (ss *SampSwap) Run() (err error) {
 		return
 	}
 
-	fname, err = supercollider.Effect(fname, "filter_in_out",
-		ss.FilterIn*60/ss.TempoIn, ss.FilterOut*60/ss.TempoOut)
-	if err != nil {
-		return
+	// fname, err = supercollider.Effect(fname, "kick", ss.BeatsOut/4, 1, ss.TempoIn)
+	// if err != nil {
+	// 	return
+	// }
+
+	if ss.FilterIn > 0 || ss.FilterOut > 0 {
+		fname, err = supercollider.Effect(fname, "filter_in_out",
+			ss.FilterIn*60/ss.TempoIn, ss.FilterOut*60/ss.TempoOut)
+		if err != nil {
+			return
+		}
 	}
 	bar.Add(1)
 
@@ -190,8 +198,8 @@ func (ss *SampSwap) rereverb(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
 	length_beat := randF(1, 4)
-	start_beat := randF(3, ss.BeatsIn-length_beat-1)
-	paste_beat := randF(2, 2*(ss.BeatsIn-length_beat))
+	start_beat := randF(3, ss.BeatsOut-length_beat-1)
+	paste_beat := randF(2, 2*(ss.BeatsOut-length_beat))
 	crossfade := 0.05
 
 	piece, err := sox.Trim(ss.FileOriginal, 60/ss.TempoIn*start_beat-crossfade,
@@ -220,9 +228,9 @@ func (ss *SampSwap) rereverb(fname string) (fname2 string) {
 func (ss *SampSwap) stutter(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
-	start_beat := randF(1, ss.BeatsIn-4)
+	start_beat := randF(1, ss.BeatsOut-4)
 	stutters := randF(1, 3) * 4
-	paste_beat := randF(12, ss.BeatsIn*4-16)
+	paste_beat := randF(12, ss.BeatsOut*4-16)
 	crossfade := 0.05
 	// do the stuter
 	piece, err := sox.Stutter(ss.FileOriginal, 60/ss.TempoIn/4,
@@ -247,8 +255,8 @@ func (ss *SampSwap) reverse(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
 	length_beat := randF(1, 5) / 2
-	start_beat := randF(1, ss.BeatsIn-length_beat)
-	paste_beat := randF(1, ss.BeatsIn-length_beat)
+	start_beat := randF(1, ss.BeatsOut-length_beat)
+	paste_beat := randF(1, ss.BeatsOut-length_beat)
 	crossfade := 0.05
 
 	// grab a piece
@@ -276,8 +284,8 @@ func (ss *SampSwap) jump(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
 	length_beat := randF(1, 5) / 2
-	start_beat := randF(1, ss.BeatsIn-length_beat)
-	paste_beat := randF(1, ss.BeatsIn-length_beat)
+	start_beat := randF(1, ss.BeatsOut-length_beat)
+	paste_beat := randF(1, ss.BeatsOut-length_beat)
 	crossfade := 0.05
 	log.Tracef("jump - length %f start %f paste %f", length_beat, start_beat, paste_beat)
 	fname, err = sox.CopyPaste(fname, 60/ss.TempoIn*start_beat,
@@ -294,7 +302,7 @@ func (ss *SampSwap) pitch(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
 	length_beat := randF(1, 4) / 8
-	start_beat := randF(1, ss.BeatsIn-length_beat*8)
+	start_beat := randF(1, ss.BeatsOut-length_beat*8)
 	paste_beat := start_beat
 	crossfade := 0.095
 	var piece string
