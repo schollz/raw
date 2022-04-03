@@ -8,11 +8,13 @@ random audio workstation. wip. projected finish: june?
 
 `<ramble>`
 
-to me, making an album of music means devising a new process of making music. this repository is the beginnings of devising another new process. 
+to me, making an album of music means devising a single process of making music and using that process to generate tracks.
 
 my past processes were focused on melody and harmony. for my album [generations](https://infinitedigits.bandcamp.com/album/generations) I made a process around generative chord changes. for my album [18,000](https://infinitedigits.bandcamp.com/album/18000) I used a coding framework to write small snippets for generative audio. for my album [at the place](https://infinitedigits.bandcamp.com/album/at-the-place) I tried to devise a paper-and-pen method of developing melodies.
 
-in this current process I'm focusing on effects and structure. I plan on only using samples and trying to elevate the samples by restructuring and juxtaposed effects chains.
+in this current process I'm focusing on effects and structure. I plan on only using samples and trying to elevate the samples by restructuring and juxtaposed effects chains. 
+
+this current project is based off my other projcets [dnb.lua](https://github.com/schollz/dnb.lua), [makebreakbeat](https://github.com/schollz/makebreakbeat/), and [sampswap](https://github.com/schollz/sampswap/). this one should be better capable of cross-platformability.
 
 `</ramble>`
 
