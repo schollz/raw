@@ -46,35 +46,161 @@ make portedplugins
 `chords.toml`:
 
 ```toml
-# map[string]*sampswap.SampSwap
+Tempo = 160.0
+Bars = 160.0
+Seed = 0
 
-[A]
-FileIn = ""
-FilterIn = 0.0
-FilterOut = 0.0
-ProbJump = 0.0
-ProbPitch = 0.0
-ProbRereverb = 0.0
-ProbReverb = 0.0
-ProbReverse = 0.0
-ProbSlow = 0.0
-ProbStutter = 0.1
-ReTempoSpeed = false
-Sidechain = 0.0
-Tapedeck = false
+[[track]]
+  Name = "chords"
+  Structure = "ABABC"
 
-[B]
-FileIn = ""
-FilterIn = 0.0
-FilterOut = 0.0
-ProbJump = 0.0
-ProbPitch = 0.0
-ProbRereverb = 0.0
-ProbReverb = 0.0
-ProbReverse = 0.0
-ProbSlow = 0.0
-ProbStutter = 0.1
-ReTempoSpeed = false
-Sidechain = 0.0
-Tapedeck = false
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "B"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+[[track]]
+  Name = "vocals"
+  NameSync = "chords"
+  Structure = "DEEBFGH"
+
+  [[track.part]]
+    Name = "B"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "D"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "E"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "F"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "G"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "H"
+    [track.part.ss]
+      FileIn = ""
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.0
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
 ```

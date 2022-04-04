@@ -15,7 +15,7 @@ type Song struct {
 	Tempo  float64
 	Bars   float64 // each bar is 4 beats
 	Seed   int64
-	Tracks []Track
+	Tracks []Track `toml:"track"`
 }
 
 type Track struct {
@@ -23,14 +23,14 @@ type Track struct {
 	Structure      string   // "ABABC"
 	StructureArray []string // []string{"A","B"}
 	NameSync       string
-	Parts          []Part
+	Parts          []Part `toml:"part"`
 }
 
 type Part struct {
 	Name     string
 	Start    float64
-	Length   float64            // length in bars (each bar is 4 beats)
-	SampSwap *sampswap.SampSwap // original sample for this part
+	Length   float64            `toml:"length"` // length in bars (each bar is 4 beats)
+	SampSwap *sampswap.SampSwap `toml:"ss"`     // original sample for this part
 }
 
 func (s *Song) Generate() (err error) {
@@ -43,10 +43,8 @@ func (s *Song) Generate() (err error) {
 		s.Tracks[i].StructureArray = strings.Split(track.Structure, "")
 		log.Tracef("track%d: %v", i, s.Tracks[i].StructureArray)
 		s.Tracks[i].Parts = []Part{}
-		s.Tracks[i].PartSampswap = make(map[string]*sampswap.SampSwap)
 		for j, name := range s.Tracks[i].StructureArray {
 			p := Part{Name: name, Start: math.Round(s.Bars * float64(j) / float64(len(s.Tracks[i].StructureArray)))}
-			s.Tracks[i].PartSampswap[name] = &sampswap.SampSwap{ProbStutter: 0.1}
 			log.Debugf("part: %v", p)
 			s.Tracks[i].Parts = append(s.Tracks[i].Parts, p)
 		}
@@ -73,6 +71,8 @@ func (s *Song) Generate() (err error) {
 		}
 	}
 	// b, _ := json.MarshalIndent(s, " ", " ")
+	s.Tracks[0].Parts[0].SampSwap = &sampswap.SampSwap{}
+	s.Tracks[1].Parts[0].SampSwap = &sampswap.SampSwap{}
 	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))
 	return
