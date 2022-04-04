@@ -1,6 +1,7 @@
 package sampswap
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -16,28 +17,30 @@ import (
 )
 
 type SampSwap struct {
-	DebugLevel   string
-	Seed         int64
-	FileIn       string
-	FileOut      string
-	FileOriginal string
-	TempoIn      float64
-	TempoOut     float64
-	BeatsIn      float64
-	BeatsOut     float64
-	ProbStutter  float64
-	ProbReverse  float64
-	ProbSlow     float64
-	ProbJump     float64
-	ProbPitch    float64
-	ProbReverb   float64
-	ProbRereverb float64
-	Sidechain    float64
-	Tapedeck     bool
-	FilterIn     float64
-	FilterOut    float64
-	ReTempoNone  bool // ignores retempoing
-	ReTempoSpeed bool // ignores pitch
+	DebugLevel     string
+	Seed           int64
+	FileIn         string
+	FileOut        string
+	FileOriginal   string
+	TempoIn        float64
+	TempoOut       float64
+	BeatsIn        float64
+	BeatsOut       float64
+	ProbStutter    float64
+	ProbReverse    float64
+	ProbSlow       float64
+	ProbJump       float64
+	ProbPitch      float64
+	ProbReverb     float64
+	ProbRereverb   float64
+	Sidechain      float64
+	Tapedeck       bool
+	FilterIn       float64
+	FilterOut      float64
+	SilencePrepend float64 // number of beats
+	SilenceAppend  float64 // number of beats
+	ReTempoNone    bool    // ignores retempoing
+	ReTempoSpeed   bool    // ignores pitch
 }
 
 func Init() (ss *SampSwap) {
@@ -111,6 +114,13 @@ func (ss *SampSwap) Run() (err error) {
 	}
 
 	// add repeats until we reach the number of wanted beats
+	// subtract off the beats of silence
+	ss.BeatsOut = ss.BeatsOut - ss.SilencePrepend - ss.SilenceAppend
+	if ss.BeatsOut < 4 {
+		err = fmt.Errorf("too much silence!")
+		log.Error(err)
+		return
+	}
 	beats := math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
 	for {
 		if beats >= ss.BeatsOut {
@@ -154,6 +164,14 @@ func (ss *SampSwap) Run() (err error) {
 	for i := 0.0; i < ss.BeatsOut*ss.ProbStutter; i++ {
 		fname = ss.stutter(fname)
 		bar.Add(1)
+	}
+
+	// add silence to beginning and end if asked for
+	if ss.SilencePrepend > 0 {
+		fname, err = sox.SilencePrepend(fname, 60/ss.TempoIn*ss.SilencePrepend)
+	}
+	if ss.SilenceAppend > 0 {
+		fname, err = sox.SilenceAppend(fname, 60/ss.TempoIn*ss.SilenceAppend)
 	}
 
 	// retempo

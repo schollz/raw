@@ -34,7 +34,8 @@ func TestRunApp(t *testing.T) {
 	ss.FilterIn = 4
 	ss.FilterOut = 8
 	ss.TempoOut = 160
-	ss.ReTempoStretch = true
+	ss.SilencePrepend = 8
+	ss.SilenceAppend = 4
 	assert.Nil(t, ss.Run())
 	fmt.Printf("ss: %+v\n", ss)
 }
