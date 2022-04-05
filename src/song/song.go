@@ -130,7 +130,7 @@ func (s *Song) CombineAll() (err error) {
 			}
 		}(jobs, results)
 	}
-	for tracki, _ := range s.Tracks {
+	for tracki := range s.Tracks {
 		jobs <- job{tracki: tracki}
 	}
 	close(jobs)
@@ -174,7 +174,8 @@ func (s *Song) RunAll() (err error) {
 				var r result
 				r.tracki = j.tracki
 				r.parti = j.parti
-				// TODO: determine the length stuff
+				s.Tracks[j.tracki].Parts[j.parti].SampSwap.BeatsOut = s.Tracks[j.tracki].Parts[j.parti].Length * 4
+				// TODO: add silence to tracks if they aren't the first track?
 				r.err = s.Tracks[j.tracki].Parts[j.parti].SampSwap.Run()
 				results <- r
 			}

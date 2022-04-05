@@ -49,25 +49,28 @@ RUN cp -r /compile/miugens/build/mi-UGens /root/.local/share/SuperCollider/Exten
 WORKDIR /compile
 RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz
-RUN /usr/local/go/bin/go install -v -x github.com/schollz/sendosc@latest
+COPY main.go /compile/main.go 
+COPY src /compile/src
+COPY go.mod /compile/go.mod 
+COPY go.sum /compile/go.sum 
+RUN /usr/local/go/bin/go install -v
 
-RUN pwd
-RUN pwd
 # build the slimmed down image
 FROM ubuntu:20.04
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev lua5.3 python3 sox jackd2 python3-pip
-RUN python3 -m pip install toml
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libjack-jackd2-dev libsamplerate0-dev libsndfile1-dev libasound2-dev libavahi-client-dev libreadline-dev libfftw3-dev libudev-dev libncurses5-dev sox jackd2
 RUN echo /usr/bin/jackd -d dummy -r 48000 > /root/.jackdrc
 COPY --from=builder /usr/local/include/SuperCollider /usr/local/include/SuperCollider
 COPY --from=builder /usr/local/lib/SuperCollider /usr/local/lib/SuperCollider
 COPY --from=builder /usr/local/share/SuperCollider /usr/local/share/SuperCollider
 COPY --from=builder /usr/local/bin/sclang /usr/local/bin/sclang
 COPY --from=builder /usr/local/bin/scsynth /usr/local/bin/scsynth
-COPY --from=builder /root/go/bin/sendosc /usr/local/bin/sendosc
+COPY --from=builder /usr/local/go /usr/local/go
 COPY --from=builder /root/.local /root/.local
-COPY scripts/raw.lua /root/raw.lua
-COPY scripts/raw.sc /root/raw.sc
 COPY scripts/dockerstartup.sh /root/dockerstartup.sh
+COPY main.go /root/main.go 
+COPY src /root/src
+COPY go.mod /root/go.mod 
+COPY go.sum /root/go.sum 
 WORKDIR /root
 CMD ["/root/dockerstartup.sh"]
