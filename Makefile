@@ -8,6 +8,10 @@ docker-run:
 docker-build:
 	docker build -t raw . 
 
+samples:
+	wget https://github.com/schollz/raw/releases/download/samples/samples.tar.gz
+	tar -xvzf samples.tar.gz
+
 install:
 	sudo -H python3 -m pip install -r requirements.txt
 	git clone https://github.com/schollz/sendosc
