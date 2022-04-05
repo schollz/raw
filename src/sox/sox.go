@@ -24,7 +24,7 @@ var TempPrefix = "sox"
 // TempType is the type of file to be generated (should be "wav")
 var TempType = "wav"
 
-func tmpfile() string {
+func Tmpfile() string {
 	randBytes := make([]byte, 16)
 	rand.Read(randBytes)
 	return filepath.Join(TempDir, TempPrefix+hex.EncodeToString(randBytes)+"."+TempType)
@@ -135,9 +135,9 @@ func SilenceAppend(fname string, length float64) (fname2 string, err error) {
 	if err != nil {
 		return
 	}
-	silencefile := tmpfile()
+	silencefile := Tmpfile()
 	defer os.Remove(silencefile)
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	// generate silence
 	_, _, err = run("sox", "-n", "-r", fmt.Sprint(samplerate), "-c", fmt.Sprint(channels), silencefile, "trim", "0.0", fmt.Sprint(length))
 	if err != nil {
@@ -158,9 +158,9 @@ func SilencePrepend(fname string, length float64) (fname2 string, err error) {
 	if err != nil {
 		return
 	}
-	silencefile := tmpfile()
+	silencefile := Tmpfile()
 	defer os.Remove(silencefile)
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	// generate silence
 	_, _, err = run("sox", "-n", "-r", fmt.Sprint(samplerate), "-c", fmt.Sprint(channels), silencefile, "trim", "0.0", fmt.Sprint(length))
 	if err != nil {
@@ -176,14 +176,14 @@ func SilencePrepend(fname string, length float64) (fname2 string, err error) {
 
 // SilenceTrim trims silence around a file
 func SilenceTrim(fname string) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "silence", "1", "0.1", `0.025%`, "reverse", "silence", "1", "0.1", `0.25%`, "reverse")
 	return
 }
 
 // Trim will trim the audio from the start point (with optional length)
 func Trim(fname string, start float64, length ...float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	if len(length) > 0 {
 		_, _, err = run("sox", fname, fname2, "trim", fmt.Sprint(start), fmt.Sprint(length[0]))
 	} else {
@@ -194,21 +194,21 @@ func Trim(fname string, start float64, length ...float64) (fname2 string, err er
 
 // Reverse will reverse the audio
 func Reverse(fname string) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "reverse")
 	return
 }
 
 // Pitch repitched the audio
 func Pitch(fname string, notes int) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "pitch", fmt.Sprintf("%d", notes*100))
 	return
 }
 
 // Join will concatonate the files
 func Join(fnames ...string) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	fnames = append(fnames, fname2)
 	_, _, err = run(append([]string{"sox"}, fnames...)...)
 	return
@@ -216,28 +216,28 @@ func Join(fnames ...string) (fname2 string, err error) {
 
 // Repeat will add n repeats to the audio
 func Repeat(fname string, n int) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "repeat", fmt.Sprintf("%d", n))
 	return
 }
 
 // RetempoSpeed will change the tempo of the audio and pitch
 func RetempoSpeed(fname string, old_tempo float64, new_tempo float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "speed", fmt.Sprint(new_tempo/old_tempo), "rate", "-v", "48k")
 	return
 }
 
 // RetempoStretch will change the tempo of the audio trying to keep pitch similar
 func RetempoStretch(fname string, old_tempo float64, new_tempo float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "tempo", "-m", fmt.Sprint(new_tempo/old_tempo))
 	return
 }
 
 // RetempoStretch will change the tempo of the audio trying to keep pitch similar
 func Slowdown(fname string, slowdown float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "tempo", "-m", fmt.Sprint(slowdown))
 	return
 }
@@ -248,15 +248,15 @@ func CopyPaste(fname string, startPos float64, endPos float64, pastePos float64,
 		fname2 = fname
 		return
 	}
-	piece := tmpfile()
-	part1 := tmpfile()
-	part2 := tmpfile()
-	splice1 := tmpfile()
+	piece := Tmpfile()
+	part1 := Tmpfile()
+	part2 := Tmpfile()
+	splice1 := Tmpfile()
 	defer os.Remove(piece)
 	defer os.Remove(part1)
 	defer os.Remove(part2)
 	defer os.Remove(splice1)
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	leeway := 0.0
 	if len(leeway0) > 0 {
 		leeway = leeway0[0]
@@ -313,13 +313,13 @@ func Paste(fname string, piece string, pasteStart float64, crossfade float64) (f
 		fname2 = fname
 		return
 	}
-	part1 := tmpfile()
-	part2 := tmpfile()
-	splice1 := tmpfile()
+	part1 := Tmpfile()
+	part2 := Tmpfile()
+	splice1 := Tmpfile()
 	defer os.Remove(part1)
 	defer os.Remove(part2)
 	defer os.Remove(splice1)
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	leeway := 0.0
 
 	// 	os.cmd(string.format("sox %s %s trim 0 %f",fname,part1,paste_start+e))
@@ -363,21 +363,21 @@ func SampleRate(fname string, srCh ...int) (fname2 string, err error) {
 	if len(srCh) > 0 {
 		sampleRate = srCh[0]
 	}
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "rate", fmt.Sprint(sampleRate))
 	return
 }
 
 // Gain applies gain
 func Gain(fname string, gain float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "gain", fmt.Sprint(gain))
 	return
 }
 
 // Stretch does a time stretch
 func Stretch(fname string, stretch float64) (fname2 string, err error) {
-	fname2 = tmpfile()
+	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "stretch", fmt.Sprint(stretch))
 	return
 }
@@ -400,9 +400,9 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 		gain_amt = xfadePieceStutterGain[2]
 	}
 
-	partFirst := tmpfile()
-	partMiddle := tmpfile()
-	partLast := tmpfile()
+	partFirst := Tmpfile()
+	partMiddle := Tmpfile()
+	partLast := Tmpfile()
 	defer os.Remove(partFirst)
 	defer os.Remove(partMiddle)
 	defer os.Remove(partLast)
@@ -441,7 +441,7 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 				return
 			}
 		} else {
-			fnameNext = tmpfile()
+			fnameNext = Tmpfile()
 			fnameMid := partLast
 			if i < count {
 				fnameMid = partMiddle

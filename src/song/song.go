@@ -3,12 +3,15 @@ package song
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/pelletier/go-toml"
 	log "github.com/schollz/logger"
 	"github.com/schollz/raw/src/sampswap"
+	"github.com/schollz/raw/src/sox"
+	"github.com/schollz/raw/src/supercollider"
 )
 
 type Song struct {
@@ -24,6 +27,7 @@ type Track struct {
 	StructureArray []string // []string{"A","B"}
 	NameSync       string
 	Parts          []Part `toml:"part"`
+	FileOut        string
 }
 
 type Part struct {
@@ -75,5 +79,122 @@ func (s *Song) Generate() (err error) {
 	s.Tracks[1].Parts[0].SampSwap = &sampswap.SampSwap{}
 	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))
+
+	// run all the song components
+	if err = s.RunAll(); err != nil {
+		return
+	}
+
+	// combine all the song components
+	if err = s.CombineAll(); err != nil {
+		return
+	}
+
+	// clean up everything
+	sox.Clean()
+	supercollider.Stop()
+	return
+}
+
+func (s *Song) CombineAll() (err error) {
+	// start worker group to generate the parts for each track
+	numJobs := len(s.Tracks)
+	type job struct {
+		tracki int
+	}
+	type result struct {
+		tracki int
+		err    error
+	}
+	jobs := make(chan job, numJobs)
+	results := make(chan result, numJobs)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func(jobs <-chan job, results chan<- result) {
+			for j := range jobs {
+				// step 3: specify the work for the worker
+				var r result
+				r.tracki = j.tracki
+				fileList := []string{}
+				for _, part := range s.Tracks[j.tracki].Parts {
+					if part.SampSwap.FileOut != "" {
+						fileList = append(fileList, part.SampSwap.FileOut)
+					}
+				}
+				if len(fileList) > 1 {
+					s.Tracks[j.tracki].FileOut, r.err = sox.Join(fileList...)
+				} else if len(fileList) == 1 {
+					s.Tracks[j.tracki].FileOut = fileList[0]
+				}
+				results <- r
+			}
+		}(jobs, results)
+	}
+	for tracki, _ := range s.Tracks {
+		jobs <- job{tracki: tracki}
+	}
+	close(jobs)
+	for i := 0; i < numJobs; i++ {
+		r := <-results
+		if r.err != nil {
+			// do something with error
+			log.Errorf("%+v: %s", r, r.err)
+			err = r.err
+		}
+	}
+	return
+}
+
+func (s *Song) RunAll() (err error) {
+	// start worker group to generate the parts for each track
+	numJobs := 0
+	for _, track := range s.Tracks {
+		for _, part := range track.Parts {
+			if part.SampSwap != nil {
+				numJobs++
+			}
+		}
+	}
+	type job struct {
+		tracki int
+		parti  int
+	}
+	type result struct {
+		tracki int
+		parti  int
+		err    error
+	}
+	jobs := make(chan job, numJobs)
+	results := make(chan result, numJobs)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func(jobs <-chan job, results chan<- result) {
+			for j := range jobs {
+				// step 3: specify the work for the worker
+				var r result
+				r.tracki = j.tracki
+				r.parti = j.parti
+				// TODO: determine the length stuff
+				r.err = s.Tracks[j.tracki].Parts[j.parti].SampSwap.Run()
+				results <- r
+			}
+		}(jobs, results)
+	}
+	for tracki, track := range s.Tracks {
+		for parti, part := range track.Parts {
+			if part.SampSwap != nil {
+				jobs <- job{tracki: tracki, parti: parti}
+			}
+		}
+	}
+	close(jobs)
+	for i := 0; i < numJobs; i++ {
+		r := <-results
+		if r.err != nil {
+			// do something with error
+			log.Errorf("%+v: %s", r, r.err)
+			err = r.err
+		}
+	}
 	return
 }

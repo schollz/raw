@@ -48,6 +48,10 @@ func Init() (ss *SampSwap) {
 }
 
 func (ss *SampSwap) Run() (err error) {
+	if ss.FileIn == "" {
+		err = fmt.Errorf("no input file")
+		return
+	}
 	if ss.DebugLevel != "" {
 		log.SetLevel(ss.DebugLevel)
 	}
@@ -208,6 +212,10 @@ func (ss *SampSwap) Run() (err error) {
 		}
 	}
 	bar.Add(1)
+
+	if ss.FileOut == "" {
+		ss.FileOut = sox.Tmpfile()
+	}
 
 	err = os.Rename(fname, ss.FileOut)
 	return
