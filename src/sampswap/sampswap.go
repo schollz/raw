@@ -2,6 +2,7 @@ package sampswap
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"os"
@@ -17,30 +18,32 @@ import (
 )
 
 type SampSwap struct {
-	DebugLevel     string
-	Seed           int64
-	FileIn         string
-	FileOut        string
-	FileOriginal   string
-	TempoIn        float64
-	TempoOut       float64
-	BeatsIn        float64
-	BeatsOut       float64
-	ProbStutter    float64
-	ProbReverse    float64
-	ProbSlow       float64
-	ProbJump       float64
-	ProbPitch      float64
-	ProbReverb     float64
-	ProbRereverb   float64
-	Sidechain      float64
-	Tapedeck       bool
-	FilterIn       float64
-	FilterOut      float64
-	SilencePrepend float64 // number of beats
-	SilenceAppend  float64 // number of beats
-	ReTempoNone    bool    // ignores retempoing
-	ReTempoSpeed   bool    // ignores pitch
+	DebugLevel          string
+	Seed                int64
+	FileIn              string
+	FileOut             string
+	FileOriginal        string
+	TempoIn             float64
+	TempoOut            float64
+	BeatsIn             float64
+	BeatsOut            float64
+	ProbStutter         float64
+	ProbReverse         float64
+	ProbSlow            float64
+	ProbJump            float64
+	ProbPitch           float64
+	ProbReverb          float64
+	ProbRereverb        float64
+	Sidechain           float64
+	Tapedeck            bool
+	FilterIn            float64
+	FilterOut           float64
+	SilencePrepend      float64 // number of beats
+	SilenceAppend       float64 // number of beats
+	ReTempoNone         bool    // ignores retempoing
+	ReTempoSpeed        bool    // ignores pitch
+	showProgress        bool
+	doStopSuperCollider bool
 }
 
 func Init() (ss *SampSwap) {
@@ -60,7 +63,9 @@ func (ss *SampSwap) Run() (err error) {
 	}
 	rand.Seed(ss.Seed)
 	var fname string
-	defer supercollider.Stop()
+	if ss.doStopSuperCollider {
+		defer supercollider.Stop()
+	}
 
 	// convert to 48000
 	fname, err = sox.SampleRate(ss.FileIn, 48000)
@@ -78,7 +83,7 @@ func (ss *SampSwap) Run() (err error) {
 
 	// estimate bpm
 	if ss.TempoIn == 0 {
-		ss.TempoIn, err = estimateBPM(fname)
+		ss.TempoIn, err = estimateBPM(fname, ss.FileIn)
 		if err != nil {
 			log.Error(err)
 			return
@@ -96,8 +101,8 @@ func (ss *SampSwap) Run() (err error) {
 			ss.TempoOut = bpm
 		}
 	}
-	log.Infof("tempo in: %f bpm", ss.TempoIn)
-	log.Infof("tempo out: %f bpm", ss.TempoOut)
+	log.Debugf("tempo in: %f bpm", ss.TempoIn)
+	log.Debugf("tempo out: %f bpm", ss.TempoOut)
 
 	// determine average number of beats
 	ss.BeatsIn = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
@@ -143,12 +148,12 @@ func (ss *SampSwap) Run() (err error) {
 	if err != nil {
 		return
 	}
-	log.Infof("beats: %f", ss.BeatsOut)
+	log.Debugf("beats: %f", ss.BeatsOut)
 	ss.FileOriginal = fname
 
 	total := 2 + ss.BeatsOut*(ss.ProbPitch+ss.ProbJump+
 		ss.ProbReverse+ss.ProbStutter+ss.ProbRereverb)
-	bar := progressbar.Default(int64(total))
+	bar := progressbar.NewOptions(int(total), progressbar.OptionSetVisibility(ss.showProgress))
 	for i := 0.0; i < ss.BeatsOut*ss.ProbPitch; i++ {
 		fname = ss.pitch(fname)
 		bar.Add(1)
@@ -168,6 +173,7 @@ func (ss *SampSwap) Run() (err error) {
 	for i := 0.0; i < ss.BeatsOut*ss.ProbStutter; i++ {
 		fname = ss.stutter(fname)
 		bar.Add(1)
+		break
 	}
 
 	// add silence to beginning and end if asked for
@@ -179,14 +185,16 @@ func (ss *SampSwap) Run() (err error) {
 	}
 
 	// retempo
-	if ss.ReTempoSpeed {
-		fname, err = sox.RetempoSpeed(fname, ss.TempoIn, ss.TempoOut)
-	} else if ss.ReTempoNone {
-	} else {
-		fname, err = sox.RetempoStretch(fname, ss.TempoIn, ss.TempoOut)
-	}
-	if err != nil {
-		return
+	if ss.TempoIn != ss.TempoOut {
+		if ss.ReTempoSpeed {
+			fname, err = sox.RetempoSpeed(fname, ss.TempoIn, ss.TempoOut)
+		} else if ss.ReTempoNone {
+		} else {
+			fname, err = sox.RetempoStretch(fname, ss.TempoIn, ss.TempoOut)
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	if ss.Sidechain > 0 {
@@ -255,13 +263,14 @@ func (ss *SampSwap) rereverb(fname string) (fname2 string) {
 func (ss *SampSwap) stutter(fname string) (fname2 string) {
 	var err error
 	fname2 = fname
-	start_beat := randF(1, ss.BeatsOut-4)
+	start_pos := randF(4, ss.BeatsOut-4) * 60 / ss.TempoIn
 	stutters := randF(1, 3) * 4
-	paste_beat := randF(12, ss.BeatsOut*4-16)
-	crossfade := 0.05
+	stutter_length := 60 / ss.TempoIn / 4
+	paste_pos := start_pos - (stutters-1)*stutter_length
+	crossfade := 0.01
 	// do the stuter
-	piece, err := sox.Stutter(ss.FileOriginal, 60/ss.TempoIn/4,
-		60/ss.TempoIn*start_beat, stutters, crossfade, 0.001)
+	piece, err := sox.Stutter(ss.FileOriginal, stutter_length,
+		start_pos, stutters, crossfade, 0.001)
 	if err != nil {
 		return
 	}
@@ -271,7 +280,7 @@ func (ss *SampSwap) stutter(fname string) (fname2 string) {
 		return
 	}
 	// paste it
-	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn/4*paste_beat, crossfade)
+	fname, err = sox.Paste(fname, piece, paste_pos, crossfade)
 	if err == nil {
 		fname2 = fname
 	}
@@ -354,17 +363,23 @@ func randF(min, max float64) float64 {
 	return math.Round(min + rand.Float64()*(max-min))
 }
 
-func estimateBPM(fname string) (bpm float64, err error) {
+func estimateBPM(fname string, originalName ...string) (bpm float64, err error) {
 	// first see if the bpm appears in the filename
 	r, _ := regexp.Compile(`bpm(\d+)`)
-	bpm, err = strconv.ParseFloat(strings.TrimPrefix(r.FindString(fname), "bpm"), 64)
+	tryName := fname
+	if len(originalName) > 0 {
+		tryName = originalName[0]
+	}
+	bpm, err = strconv.ParseFloat(strings.TrimPrefix(r.FindString(tryName), "bpm"), 64)
 	if err == nil {
+		log.Debugf("estimated bpm from file name: %f", bpm)
 		return
 	}
 
 	// assume the file trimmed and guess it based on the length
 	audioLength, err := sox.Length(fname)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 
@@ -384,6 +399,32 @@ func estimateBPM(fname string) (bpm float64, err error) {
 			}
 		}
 	}
+	log.Debugf("estimated bpm from file length: %f", bpm)
 
 	return
+}
+
+func copy(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }

@@ -100,9 +100,10 @@ func scPath(f string) string {
 
 func Effect(fname string, effect string, fs ...float64) (fname2 string, err error) {
 	blockUntilReady()
-	log.Trace("getting lock")
+	log.Tracef("getting lock for %s", fname)
 	mu.Lock()
 	defer mu.Unlock()
+	log.Tracef("got lock for %s", fname)
 	effectF := []float64{0, 0, 0, 0}
 	for i, f := range fs {
 		if i < 4 {
@@ -140,7 +141,7 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 
 	// wait for the file to be written
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 		if _, err := os.Stat(scDoneFile); err == nil {
 			log.Debug("supercollider is done")
 			break

@@ -3,6 +3,7 @@ package song
 import (
 	"fmt"
 	"math"
+	"os"
 	"runtime"
 	"sort"
 	"strings"
@@ -38,6 +39,19 @@ type Part struct {
 }
 
 func (s *Song) Generate() (err error) {
+	// if there exist sampswap values, save them
+	sampswapParts := make(map[int]map[string]*sampswap.SampSwap)
+	for i, track := range s.Tracks {
+		for _, part := range track.Parts {
+			if part.SampSwap != nil && part.Name != "" {
+				if _, ok := sampswapParts[i]; !ok {
+					sampswapParts[i] = make(map[string]*sampswap.SampSwap)
+				}
+				sampswapParts[i][part.Name] = part.SampSwap
+			}
+		}
+	}
+
 	// first run through, generate the part positions for each track
 	namesToIndex := make(map[string]int)
 	for i, track := range s.Tracks {
@@ -61,6 +75,17 @@ func (s *Song) Generate() (err error) {
 				s.Tracks[i].Parts = append(s.Tracks[i].Parts, partOther)
 			}
 		}
+		// add the known sampswap to each part
+		for j, part := range s.Tracks[i].Parts {
+			if _, ok := sampswapParts[i]; !ok {
+				continue
+			}
+			if _, ok := sampswapParts[i][part.Name]; !ok {
+				continue
+			}
+			s.Tracks[i].Parts[j].SampSwap = sampswapParts[i][part.Name]
+		}
+
 		// sort the parts
 		sort.Slice(s.Tracks[i].Parts, func(m, n int) bool {
 			return s.Tracks[i].Parts[m].Start < s.Tracks[i].Parts[n].Start
@@ -74,9 +99,6 @@ func (s *Song) Generate() (err error) {
 			s.Tracks[i].Parts[j].Length = nextStart - part.Start
 		}
 	}
-	// b, _ := json.MarshalIndent(s, " ", " ")
-	s.Tracks[0].Parts[0].SampSwap = &sampswap.SampSwap{}
-	s.Tracks[1].Parts[0].SampSwap = &sampswap.SampSwap{}
 	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))
 
@@ -88,6 +110,15 @@ func (s *Song) Generate() (err error) {
 	// combine all the song components
 	if err = s.CombineAll(); err != nil {
 		return
+	}
+
+	// rename the final file for each track
+	for _, track := range s.Tracks {
+		if track.FileOut != "" {
+			newName := "temp.wav" // TODO change this
+			log.Debugf("%s -> %s", track.FileOut, newName)
+			os.Rename(track.FileOut, newName)
+		}
 	}
 
 	// clean up everything
@@ -117,8 +148,10 @@ func (s *Song) CombineAll() (err error) {
 				r.tracki = j.tracki
 				fileList := []string{}
 				for _, part := range s.Tracks[j.tracki].Parts {
-					if part.SampSwap.FileOut != "" {
-						fileList = append(fileList, part.SampSwap.FileOut)
+					if part.SampSwap != nil {
+						if part.SampSwap.FileOut != "" {
+							fileList = append(fileList, part.SampSwap.FileOut)
+						}
 					}
 				}
 				if len(fileList) > 1 {

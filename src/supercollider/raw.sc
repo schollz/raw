@@ -187,7 +187,7 @@ scoreFn={
                         ["writing",scDoneFile].postln;
                         0.15.wait;
                         File.new(scDoneFile, "w");
-                        ["finished, wrote ",scDoneFile].postln;
+                        ["finished: wrote ",scDoneFile].postln;
                     }.play;
                 }
             );

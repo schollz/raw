@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -329,6 +330,7 @@ func Paste(fname string, piece string, pasteStart float64, crossfade float64) (f
 		fname2 = fname
 		return
 	}
+	// copy(part1, "1.wav")
 
 	// 	os.cmd(string.format("sox %s %s trim %f",fname,part2,paste_start+copy_length-e*3))
 	_, _, err = run("sox", fname, part2, "trim", fmt.Sprint(pasteStart+copyLength-crossfade*3))
@@ -337,6 +339,7 @@ func Paste(fname string, piece string, pasteStart float64, crossfade float64) (f
 		fname2 = fname
 		return
 	}
+	// copy(part2, "2.wav")
 
 	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",part1,piece,splice1,paste_start+e,e,l))
 	_, _, err = run("sox", part1, piece, splice1, "splice", fmt.Sprintf("%f,%f,%f", pasteStart+crossfade, crossfade, leeway))
@@ -345,6 +348,7 @@ func Paste(fname string, piece string, pasteStart float64, crossfade float64) (f
 		fname2 = fname
 		return
 	}
+	// copy(splice1, "3.wav")
 
 	// 	os.cmd(string.format("sox %s %s %s splice %f,%f,%f",splice1,part2,fname2,paste_start+copy_length+e,e,l))
 	_, _, err = run("sox", splice1, part2, fname2, "splice", fmt.Sprintf("%f,%f,%f", pasteStart+copyLength+crossfade, crossfade, leeway))
@@ -353,6 +357,7 @@ func Paste(fname string, piece string, pasteStart float64, crossfade float64) (f
 		fname2 = fname
 		return
 	}
+	// copy(fname2, "4.wav")
 
 	return
 }
@@ -494,3 +499,28 @@ func Stutter(fname string, stutter_length float64, pos_start float64, count floa
 // 	end
 // 	return fname2
 // end
+
+func copy(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
+}
