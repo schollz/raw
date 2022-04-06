@@ -113,9 +113,9 @@ func (s *Song) Generate() (err error) {
 	}
 
 	// rename the final file for each track
-	for _, track := range s.Tracks {
+	for i, track := range s.Tracks {
 		if track.FileOut != "" {
-			newName := "temp.wav" // TODO change this
+			newName := fmt.Sprintf("track%d.wav", i) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
 			os.Rename(track.FileOut, newName)
 		}

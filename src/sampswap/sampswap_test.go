@@ -2,11 +2,18 @@ package sampswap
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/schollz/raw/src/supercollider"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestChooseRandom(t *testing.T) {
+	fname, err := chooseRandomFile("*.go")
+	assert.Nil(t, err)
+	assert.True(t, strings.Contains(fname, ".go"))
+}
 
 func TestEstimateTempo(t *testing.T) {
 	tempo, err := estimateBPM("this_is_4th_file_bpm_bpm123_45.wav")
