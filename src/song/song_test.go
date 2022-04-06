@@ -12,7 +12,7 @@ func TestSong(t *testing.T) {
 	var s Song
 	assert.Nil(t, toml.Unmarshal([]byte(`Tempo = 160.0
 Bars = 160.0
-Seed = 0
+Seed = 12
 
 [[track]]
   Name = "chords"
@@ -21,7 +21,7 @@ Seed = 0
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn = "../../samples/chords/MiniKit1_160_Chords_Amin_keyAmin_bpm160.wav"
+      FileIn = "../../samples/chords/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.0
@@ -39,7 +39,7 @@ Seed = 0
   [[track.part]]
     Name = "B"
     [track.part.ss]
-      FileIn = "../../samples/chords/KIT6_160_Chords_Future_Modulation_6_Amin_keyAmin_bpm160.wav"
+      FileIn = "../../samples/chords/*.wav"
       FilterIn = 0.0
       FilterOut = 0.0
       ProbJump = 0.0
@@ -57,7 +57,7 @@ Seed = 0
   [[track.part]]
     Name = "C"
     [track.part.ss]
-      FileIn = "../../samples/chords/OS_NC_160_Am_Showdown_Synths_keyAmin_bpm160.wav"
+      FileIn = "../../samples/chords/*.wav"
       FilterIn = 0.0
       FilterOut = 8.0
       ProbJump = 0.0
@@ -74,7 +74,7 @@ Seed = 0
 
 [[track]]
   Name = "drums"
-  Structure = "ABABC"
+  Structure = "CCABCABC"
 
   [[track.part]]
     Name = "A"
@@ -82,16 +82,16 @@ Seed = 0
       FileIn =  "../../samples/drums/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
-      ProbJump = 0.05
+      ProbJump = 0.1
       ProbPitch = 0.0
       ProbRereverb = 0.01
       ProbReverb = 0.0
       ProbReverse = 0.01
       ProbSlow = 0.0
-      ProbStutter = 0.05
+      ProbStutter = 0.1
       Sidechain = 0.0
       SilenceAppend = 0.0
-      SilencePrepend = 4.0
+      SilencePrepend = 0.0
       Tapedeck = false
 
   [[track.part]]
@@ -100,15 +100,15 @@ Seed = 0
       FileIn =  "../../samples/drums/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
-      ProbJump = 0.05
+      ProbJump = 0.1
       ProbPitch = 0.0
-      ProbRereverb = 0.05
+      ProbRereverb = 0.1
       ProbReverb = 0.0
-      ProbReverse = 0.05
+      ProbReverse = 0.1
       ProbSlow = 0.0
-      ProbStutter = 0.05
+      ProbStutter = 0.1
       Sidechain = 0.0
-      SilenceAppend = 2.0
+      SilenceAppend = 0.0
       SilencePrepend = 0.0
       Tapedeck = false
 
@@ -118,13 +118,13 @@ Seed = 0
       FileIn =  "../../samples/drums/*.wav"
       FilterIn = 1.0
       FilterOut = 0.0
-      ProbJump = 0.05
+      ProbJump = 0.1
       ProbPitch = 0.0
-      ProbRereverb = 0.05
+      ProbRereverb = 0.1
       ProbReverb = 0.0
-      ProbReverse = 0.05
+      ProbReverse = 0.1
       ProbSlow = 0.0
-      ProbStutter = 0.05
+      ProbStutter = 0.1
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0
@@ -133,7 +133,7 @@ Seed = 0
 
 [[track]]
   Name = "vocals"
-  Structure = "ABABC"
+  Structure = "BAABCABC"
 
   [[track.part]]
     Name = "A"
