@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -50,9 +51,29 @@ func Init() (ss *SampSwap) {
 	return &SampSwap{}
 }
 
+func chooseRandomFile(fileGlob string) (fname string, err error) {
+	files, err := filepath.Glob(fileGlob)
+	if err != nil {
+		return
+	}
+	if len(files) == 0 {
+		err = fmt.Errorf("no matching files")
+		return
+	}
+	n := rand.Intn(len(files))
+	fname = files[n]
+	return
+}
+
 func (ss *SampSwap) Run() (err error) {
 	if ss.FileIn == "" {
 		err = fmt.Errorf("no input file")
+		fmt.Println("HI")
+	}
+	if strings.Contains(ss.FileIn, "*") {
+		ss.FileIn, err = chooseRandomFile(ss.FileIn)
+	}
+	if err != nil {
 		return
 	}
 	if ss.DebugLevel != "" {
