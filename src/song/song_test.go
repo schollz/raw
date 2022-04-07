@@ -11,8 +11,8 @@ import (
 func TestSong(t *testing.T) {
 	var s Song
 	assert.Nil(t, toml.Unmarshal([]byte(`Tempo = 160.0
-Bars = 160.0
-Seed = 12
+Bars = 80.0
+Seed = 0
 
 [[track]]
   Name = "chords"
@@ -21,7 +21,7 @@ Seed = 12
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn = "../../samples/chords/*.wav"
+      FileIn = "/media/zns/backup4tb/splice2/chords-synth-am/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.0
@@ -36,50 +36,14 @@ Seed = 12
       SilencePrepend = 0.0
       Tapedeck = false
 
-  [[track.part]]
-    Name = "B"
-    [track.part.ss]
-      FileIn = "../../samples/chords/*.wav"
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.1
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "C"
-    [track.part.ss]
-      FileIn = "../../samples/chords/*.wav"
-      FilterIn = 0.0
-      FilterOut = 8.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
 [[track]]
   Name = "drums"
-  Structure = "CCABCABC"
+  Structure = "DEFGHIJKLMNOP"
 
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn =  "../../samples/drums/*.wav"
+      FileIn =  "/media/zns/backup4tb/splice2/drums-dnb/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.1
@@ -94,51 +58,15 @@ Seed = 12
       SilencePrepend = 0.0
       Tapedeck = false
 
-  [[track.part]]
-    Name = "B"
-    [track.part.ss]
-      FileIn =  "../../samples/drums/*.wav"
-      FilterIn = 8.0
-      FilterOut = 0.0
-      ProbJump = 0.1
-      ProbPitch = 0.0
-      ProbRereverb = 0.1
-      ProbReverb = 0.0
-      ProbReverse = 0.1
-      ProbSlow = 0.0
-      ProbStutter = 0.1
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "C"
-    [track.part.ss]
-      FileIn =  "../../samples/drums/*.wav"
-      FilterIn = 1.0
-      FilterOut = 0.0
-      ProbJump = 0.1
-      ProbPitch = 0.0
-      ProbRereverb = 0.1
-      ProbReverb = 0.0
-      ProbReverse = 0.1
-      ProbSlow = 0.0
-      ProbStutter = 0.1
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
 
 [[track]]
   Name = "vocals"
-  Structure = "BAABCABC"
+  Structure = "DEFDF"
 
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn =  "../../samples/vocals/*.wav"
+      FileIn =  "/media/zns/backup4tb/splice2/vocals-am/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.05
@@ -150,40 +78,26 @@ Seed = 12
       ProbStutter = 0.05
       Sidechain = 0.0
       SilenceAppend = 0.0
-      SilencePrepend = 4.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "B"
-    [track.part.ss]
-      FileIn =  "../../samples/vocals/*.wav"
-      FilterIn = 8.0
-      FilterOut = 0.0
-      ProbJump = 0.1
-      ProbPitch = 0.0
-      ProbRereverb = 0.07
-      ProbReverb = 0.0
-      ProbReverse = 0.05
-      ProbSlow = 0.0
-      ProbStutter = 0.05
-      Sidechain = 0.0
-      SilenceAppend = 2.0
       SilencePrepend = 0.0
       Tapedeck = false
 
+[[track]]
+  Name = "trumpet"
+  Structure = "DEFDF"
+
   [[track.part]]
-    Name = "C"
+    Name = "A"
     [track.part.ss]
-      FileIn =  "../../samples/vocals/*.wav"
-      FilterIn = 1.0
+      FileIn =  "/media/zns/backup4tb/splice2/trumpet-a/*.wav"
+      FilterIn = 8.0
       FilterOut = 0.0
-      ProbJump = 0.1
+      ProbJump = 0.05
       ProbPitch = 0.0
       ProbRereverb = 0.05
       ProbReverb = 0.0
       ProbReverse = 0.05
       ProbSlow = 0.0
-      ProbStutter = 0.05
+      ProbStutter = 0.1
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0

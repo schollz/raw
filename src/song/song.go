@@ -1,12 +1,16 @@
 package song
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/pelletier/go-toml"
 	log "github.com/schollz/logger"
@@ -38,16 +42,45 @@ type Part struct {
 	SampSwap *sampswap.SampSwap `toml:"ss"`     // original sample for this part
 }
 
+func chooseRandomFile(fileGlob string) (fname string, err error) {
+	files, err := filepath.Glob(fileGlob)
+	if err != nil {
+		return
+	}
+	if len(files) == 0 {
+		err = fmt.Errorf("no matching files")
+		return
+	}
+	n := rand.Intn(len(files))
+	fname = files[n]
+	return
+}
+
+func doCopy(src *sampswap.SampSwap) *sampswap.SampSwap {
+	b, _ := json.Marshal(src)
+	var dst *sampswap.SampSwap
+	json.Unmarshal(b, &dst)
+	return dst
+}
+
 func (s *Song) Generate() (err error) {
+	if s.Seed == 0 {
+		s.Seed = time.Now().UnixNano()
+	}
+	rand.Seed(s.Seed)
+
 	// if there exist sampswap values, save them
 	sampswapParts := make(map[int]map[string]*sampswap.SampSwap)
 	for i, track := range s.Tracks {
-		for _, part := range track.Parts {
+		for j, part := range track.Parts {
 			if part.SampSwap != nil && part.Name != "" {
 				if _, ok := sampswapParts[i]; !ok {
 					sampswapParts[i] = make(map[string]*sampswap.SampSwap)
 				}
 				sampswapParts[i][part.Name] = part.SampSwap
+				if j == 0 {
+					sampswapParts[i]["other"] = part.SampSwap
+				}
 			}
 		}
 	}
@@ -76,14 +109,41 @@ func (s *Song) Generate() (err error) {
 			}
 		}
 		// add the known sampswap to each part
+		log.Tracef("sampswapParts: %+v", sampswapParts)
 		for j, part := range s.Tracks[i].Parts {
 			if _, ok := sampswapParts[i]; !ok {
 				continue
 			}
-			if _, ok := sampswapParts[i][part.Name]; !ok {
-				continue
+			if _, ok := sampswapParts[i][part.Name]; ok {
+				s.Tracks[i].Parts[j].SampSwap = doCopy(sampswapParts[i][part.Name])
+			} else if _, ok := sampswapParts[i]["other"]; ok {
+				fileIn := ""
+				if s.Tracks[i].Parts[j].SampSwap != nil {
+					fileIn = s.Tracks[i].Parts[j].SampSwap.FileIn
+				}
+				s.Tracks[i].Parts[j].SampSwap = doCopy(sampswapParts[i]["other"])
+				if fileIn != "" {
+					s.Tracks[i].Parts[j].SampSwap.FileIn = fileIn
+				}
 			}
-			s.Tracks[i].Parts[j].SampSwap = sampswapParts[i][part.Name]
+		}
+		// make sure the same parts have the same filein
+		fileIns := make(map[string]string)
+		for j, part := range s.Tracks[i].Parts {
+			if strings.Contains(s.Tracks[i].Parts[j].SampSwap.FileIn, "*") {
+				s.Tracks[i].Parts[j].SampSwap.FileIn, err = chooseRandomFile(s.Tracks[i].Parts[j].SampSwap.FileIn)
+				if err != nil {
+					return
+				}
+				if _, ok := fileIns[part.Name]; !ok {
+					fileIns[part.Name] = s.Tracks[i].Parts[j].SampSwap.FileIn
+				}
+			}
+		}
+		// update the parts
+		for j, part := range s.Tracks[i].Parts {
+			s.Tracks[i].Parts[j].SampSwap.FileIn = fileIns[part.Name]
+			s.Tracks[i].Parts[j].SampSwap.TempoOut = s.Tempo
 		}
 
 		// sort the parts
@@ -97,7 +157,9 @@ func (s *Song) Generate() (err error) {
 				nextStart = s.Tracks[i].Parts[j+1].Start
 			}
 			s.Tracks[i].Parts[j].Length = nextStart - part.Start
+			// update the tempo out
 		}
+
 	}
 	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))

@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -51,27 +50,10 @@ func Init() (ss *SampSwap) {
 	return &SampSwap{}
 }
 
-func chooseRandomFile(fileGlob string) (fname string, err error) {
-	files, err := filepath.Glob(fileGlob)
-	if err != nil {
-		return
-	}
-	if len(files) == 0 {
-		err = fmt.Errorf("no matching files")
-		return
-	}
-	n := rand.Intn(len(files))
-	fname = files[n]
-	return
-}
-
 func (ss *SampSwap) Run() (err error) {
 	if ss.FileIn == "" {
 		err = fmt.Errorf("no input file")
 		fmt.Println("HI")
-	}
-	if strings.Contains(ss.FileIn, "*") {
-		ss.FileIn, err = chooseRandomFile(ss.FileIn)
 	}
 	if err != nil {
 		return
@@ -113,17 +95,6 @@ func (ss *SampSwap) Run() (err error) {
 	if ss.TempoOut == 0 {
 		ss.TempoOut = ss.TempoIn
 	}
-	// TOOD: make optional
-	// find closest multiple of tempoout to tempoin
-	foodiff := 1000000.0
-	for _, bpm := range []float64{ss.TempoOut / 8, ss.TempoOut / 4, ss.TempoOut / 2, ss.TempoOut, ss.TempoOut * 2, ss.TempoOut * 4, ss.TempoOut * 8} {
-		if math.Abs(bpm-ss.TempoIn) < foodiff {
-			foodiff = math.Abs(bpm - ss.TempoIn)
-			ss.TempoOut = bpm
-		}
-	}
-	log.Debugf("tempo in: %f bpm", ss.TempoIn)
-	log.Debugf("tempo out: %f bpm", ss.TempoOut)
 
 	// determine average number of beats
 	ss.BeatsIn = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
@@ -142,6 +113,23 @@ func (ss *SampSwap) Run() (err error) {
 		log.Error(err)
 		return
 	}
+
+	// TODO: make optional
+	// find closest multiple of tempoout to tempoin
+	foodiff := 1000000.0
+	bestBPMDivision := 1.0
+	for _, bpmDivision := range []float64{1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8} {
+		if math.Abs(bpmDivision*ss.TempoOut-ss.TempoIn) < foodiff {
+			foodiff = math.Abs(bpmDivision*ss.TempoOut - ss.TempoIn)
+			bestBPMDivision = bpmDivision
+		}
+	}
+	log.Debugf("tempo in: %f bpm", ss.TempoIn)
+	log.Debugf("beats out (requested): %f", ss.BeatsOut)
+	ss.TempoOut = ss.TempoOut * bestBPMDivision
+	ss.BeatsOut = ss.BeatsOut * bestBPMDivision
+	log.Debugf("tempo out: %f bpm", ss.TempoOut)
+	log.Debugf("beats out (determined): %f", ss.BeatsOut)
 
 	// add repeats until we reach the number of wanted beats
 	// subtract off the beats of silence
