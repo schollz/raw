@@ -38,7 +38,7 @@ Seed = 0
 
 [[track]]
   Name = "drums"
-  Structure = "DEFGHIJKLMNOP"
+  Structure = "ABCDE"
 
   [[track.part]]
     Name = "A"
@@ -61,7 +61,7 @@ Seed = 0
 
 [[track]]
   Name = "vocals"
-  Structure = "DEFDF"
+  Structure = "DDDEFFDDFF"
 
   [[track.part]]
     Name = "A"
@@ -81,27 +81,6 @@ Seed = 0
       SilencePrepend = 0.0
       Tapedeck = false
 
-[[track]]
-  Name = "trumpet"
-  Structure = "DEFDF"
-
-  [[track.part]]
-    Name = "A"
-    [track.part.ss]
-      FileIn =  "/media/zns/backup4tb/splice2/trumpet-a/*.wav"
-      FilterIn = 8.0
-      FilterOut = 0.0
-      ProbJump = 0.05
-      ProbPitch = 0.0
-      ProbRereverb = 0.05
-      ProbReverb = 0.0
-      ProbReverse = 0.05
-      ProbSlow = 0.0
-      ProbStutter = 0.1
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
 
 
 `), &s))
