@@ -10,18 +10,18 @@ import (
 
 func TestSong(t *testing.T) {
 	var s Song
-	assert.Nil(t, toml.Unmarshal([]byte(`Tempo = 160.0
+	assert.Nil(t, toml.Unmarshal([]byte(`Tempo = 175.0
 Bars = 80.0
 Seed = 0
 
 [[track]]
   Name = "chords"
-  Structure = "ABABC"
+  Structure = "AAAAAABB"
 
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn = "/media/zns/backup4tb/splice2/chords-synth-am/*.wav"
+      FileIn = "/home/zns/go/src/github.com/schollz/raw/samples/chords/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.0
@@ -38,12 +38,12 @@ Seed = 0
 
 [[track]]
   Name = "drums"
-  Structure = "ABCDE"
+  Structure = "AABCDEFFGH"
 
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn =  "/media/zns/backup4tb/splice2/drums-dnb/*.wav"
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/drums/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.1
@@ -66,7 +66,7 @@ Seed = 0
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn =  "/media/zns/backup4tb/splice2/vocals-am/*.wav"
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/vocals/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.05
