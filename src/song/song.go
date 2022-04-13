@@ -175,13 +175,22 @@ func (s *Song) Generate() (err error) {
 	}
 
 	// rename the final file for each track
+	tracks := []string{}
 	for i, track := range s.Tracks {
 		if track.FileOut != "" {
 			newName := fmt.Sprintf("track%d.wav", i) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
 			os.Rename(track.FileOut, newName)
+			tracks = append(tracks, newName)
 		}
 	}
+
+	// make a mix
+	final, err := sox.Mix(tracks...)
+	if err != nil {
+		return
+	}
+	os.Rename(final, "song.wav")
 
 	// clean up everything
 	sox.Clean()

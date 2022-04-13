@@ -11,12 +11,12 @@ import (
 func TestSong(t *testing.T) {
 	var s Song
 	assert.Nil(t, toml.Unmarshal([]byte(`Tempo = 175.0
-Bars = 80.0
+Bars = 96.0
 Seed = 0
 
 [[track]]
   Name = "chords"
-  Structure = "AAAAAABB"
+  Structure = "AABCDE"
 
   [[track.part]]
     Name = "A"
@@ -38,7 +38,7 @@ Seed = 0
 
 [[track]]
   Name = "drums"
-  Structure = "AABCDEFFGH"
+  Structure = "AABBCCDGEHFF"
 
   [[track.part]]
     Name = "A"
@@ -52,16 +52,15 @@ Seed = 0
       ProbReverb = 0.0
       ProbReverse = 0.01
       ProbSlow = 0.0
-      ProbStutter = 0.1
+      ProbStutter = 0.15
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0
-      Tapedeck = false
-
+      Tapedeck = true
 
 [[track]]
   Name = "vocals"
-  Structure = "DDDEFFDDFF"
+  Structure = "ABCDEF"
 
   [[track.part]]
     Name = "A"
@@ -73,7 +72,7 @@ Seed = 0
       ProbPitch = 0.0
       ProbRereverb = 0.05
       ProbReverb = 0.0
-      ProbReverse = 0.05
+      ProbReverse = 0.07
       ProbSlow = 0.0
       ProbStutter = 0.05
       Sidechain = 0.0

@@ -215,6 +215,14 @@ func Join(fnames ...string) (fname2 string, err error) {
 	return
 }
 
+// Mix will mix the files
+func Mix(fnames ...string) (fname2 string, err error) {
+	fname2 = Tmpfile()
+	fnames = append(fnames, fname2)
+	_, _, err = run(append([]string{"sox", "-m"}, fnames...)...)
+	return
+}
+
 // Repeat will add n repeats to the audio
 func Repeat(fname string, n int) (fname2 string, err error) {
 	fname2 = Tmpfile()
