@@ -63,11 +63,29 @@ Seed = 0
   Structure = "ABCDEF"
 
   [[track.part]]
-    Name = "A"
+    Name = "B"
     [track.part.ss]
       FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/vocals/*.wav"
       FilterIn = 8.0
       FilterOut = 0.0
+      ProbJump = 0.05
+      ProbPitch = 0.0
+      ProbRereverb = 0.05
+      ProbReverb = 0.0
+      ProbReverse = 0.05
+      ProbSlow = 0.0
+      ProbStutter = 0.1
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/vocals/*.wav"
+      FilterIn = 16.0
+      FilterOut = 4.0
       ProbJump = 0.05
       ProbPitch = 0.0
       ProbRereverb = 0.05

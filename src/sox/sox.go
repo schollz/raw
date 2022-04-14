@@ -219,6 +219,7 @@ func Join(fnames ...string) (fname2 string, err error) {
 func Mix(fnames ...string) (fname2 string, err error) {
 	fname2 = Tmpfile()
 	fnames = append(fnames, fname2)
+	fnames = append(fnames, "norm")
 	_, _, err = run(append([]string{"sox", "-m"}, fnames...)...)
 	return
 }
