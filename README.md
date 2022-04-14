@@ -232,3 +232,15 @@ b.play;
 // contributors so far: Nathan Ho
 )
 ```
+
+
+
+
+```
+arg bpm=160,times=4; // times = number of times you'd like it to go
+var rate = bpm/60/16; // every 16 beats
+var imp = Impulse.kr(rate); // impulse every 16 beats
+var tries = BufDuration.ir(b)/(16*60/bpm); // tries are the number of 16-beat bars
+var probability = times/tries; // tries = probability * times
+var length_time=Demand.kr(imp,Dseq([1,2,4,8,16,32]*60/bpm,inf)); // length of each
+```
