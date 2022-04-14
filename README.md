@@ -244,3 +244,12 @@ var tries = BufDuration.ir(b)/(16*60/bpm); // tries are the number of 16-beat ba
 var probability = times/tries; // tries = probability * times
 var length_time=Demand.kr(imp,Dseq([1,2,4,8,16,32]*60/bpm,inf)); // length of each
 ```
+
+
+## todo
+
+- track effects
+- adding in filter sweeps
+- adding in track toggles
+- adding in tape slowdowns
+- adding in low pass filter for a second or tow
