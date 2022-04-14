@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
+	"github.com/BurntSushi/toml"
+	log "github.com/schollz/logger"
 	"github.com/schollz/raw/src/sampswap"
+	"github.com/schollz/raw/src/song"
 	"github.com/urfave/cli/v2"
 )
 
@@ -15,6 +19,41 @@ func main() {
 		Version: "v0.0.1",
 		Usage:   "random audio workstation",
 		Commands: []*cli.Command{
+			{
+				Name:  "stemstitch",
+				Usage: "stitch stems together",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Required: true,
+						Name:     "config",
+						Usage:    "config file",
+					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "debug mode",
+					},
+				},
+				Action: func(c *cli.Context) (err error) {
+					if c.Bool("debug") {
+						log.SetLevel("debug")
+					} else {
+						log.SetLevel("info")
+					}
+					b, err := ioutil.ReadFile(c.String("config"))
+					if err != nil {
+						log.Error(err)
+						return
+					}
+					var s song.Song
+					err = toml.Unmarshal(b, &s)
+					if err != nil {
+						log.Error(err)
+						return
+					}
+					err = s.Generate()
+					return
+				},
+			},
 			{
 				Name:  "sampswap",
 				Usage: "run sampswap on a single file",
@@ -106,8 +145,17 @@ func main() {
 						Usage:       "ignores re-tempoing",
 						Destination: &ss.ReTempoNone,
 					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "debug mode",
+					},
 				},
 				Action: func(c *cli.Context) error {
+					if c.Bool("debug") {
+						log.SetLevel("debug")
+					} else {
+						log.SetLevel("info")
+					}
 					return ss.Run()
 				},
 			},

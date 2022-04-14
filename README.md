@@ -41,24 +41,23 @@ make portedplugins
 ```
 
 
-### sampswap units
+## config file
 
-`chords.toml`:
 
-```toml
-Tempo = 160.0
-Bars = 160.0
+```
+Tempo = 175.0
+Bars = 96.0
 Seed = 0
 
 [[track]]
   Name = "chords"
-  Structure = "ABABC"
+  Structure = "AABCDE"
 
   [[track.part]]
     Name = "A"
     [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
+      FileIn = "/home/zns/go/src/github.com/schollz/raw/samples/chords/*.wav"
+      FilterIn = 8.0
       FilterOut = 0.0
       ProbJump = 0.0
       ProbPitch = 0.0
@@ -66,141 +65,71 @@ Seed = 0
       ProbReverb = 0.0
       ProbReverse = 0.0
       ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "B"
-    [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
+      ProbStutter = 0.2
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0
       Tapedeck = false
 
 [[track]]
+  Name = "drums"
+  Structure = "AABBCCDGEHFF"
+
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/drums/*.wav"
+      FilterIn = 8.0
+      FilterOut = 0.0
+      ProbJump = 0.1
+      ProbPitch = 0.0
+      ProbRereverb = 0.01
+      ProbReverb = 0.0
+      ProbReverse = 0.01
+      ProbSlow = 0.0
+      ProbStutter = 0.15
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = true
+
+[[track]]
   Name = "vocals"
-  NameSync = "chords"
-  Structure = "DEEBFGH"
+  Structure = "ABCDEF"
 
   [[track.part]]
     Name = "B"
     [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/vocals/*.wav"
+      FilterIn = 8.0
       FilterOut = 0.0
-      ProbJump = 0.0
+      ProbJump = 0.05
       ProbPitch = 0.0
-      ProbRereverb = 0.0
+      ProbRereverb = 0.05
       ProbReverb = 0.0
-      ProbReverse = 0.0
+      ProbReverse = 0.05
       ProbSlow = 0.0
-      ProbStutter = 0.0
+      ProbStutter = 0.1
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0
       Tapedeck = false
 
   [[track.part]]
-    Name = "D"
+    Name = "A"
     [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
+      FileIn =  "/home/zns/go/src/github.com/schollz/raw/samples/vocals/*.wav"
+      FilterIn = 16.0
+      FilterOut = 4.0
+      ProbJump = 0.05
       ProbPitch = 0.0
-      ProbRereverb = 0.0
+      ProbRereverb = 0.05
       ProbReverb = 0.0
-      ProbReverse = 0.0
+      ProbReverse = 0.05
       ProbSlow = 0.0
-      ProbStutter = 0.0
+      ProbStutter = 0.1
       Sidechain = 0.0
       SilenceAppend = 0.0
       SilencePrepend = 0.0
       Tapedeck = false
-
-  [[track.part]]
-    Name = "E"
-    [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "F"
-    [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "G"
-    [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
-  [[track.part]]
-    Name = "H"
-    [track.part.ss]
-      FileIn = ""
-      FilterIn = 0.0
-      FilterOut = 0.0
-      ProbJump = 0.0
-      ProbPitch = 0.0
-      ProbRereverb = 0.0
-      ProbReverb = 0.0
-      ProbReverse = 0.0
-      ProbSlow = 0.0
-      ProbStutter = 0.0
-      Sidechain = 0.0
-      SilenceAppend = 0.0
-      SilencePrepend = 0.0
-      Tapedeck = false
-
 ```
