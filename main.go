@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/schollz/logger"
@@ -50,7 +51,8 @@ func main() {
 						log.Error(err)
 						return
 					}
-					err = s.Generate()
+					folder, _ := filepath.Split(c.String("config"))
+					err = s.Generate(folder)
 					return
 				},
 			},

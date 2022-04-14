@@ -56,6 +56,7 @@ func (ss *SampSwap) Run() (err error) {
 		fmt.Println("HI")
 	}
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	if ss.DebugLevel != "" {
@@ -146,6 +147,7 @@ func (ss *SampSwap) Run() (err error) {
 		}
 		fname, err = sox.Repeat(fname, 1)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 		beats = math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
@@ -155,6 +157,7 @@ func (ss *SampSwap) Run() (err error) {
 	log.Tracef("trimming to %fs", ss.BeatsOut*60/ss.TempoIn)
 	fname, err = sox.Trim(fname, 0, ss.BeatsOut*60/ss.TempoIn)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	log.Debugf("beats: %f", ss.BeatsOut)
@@ -202,6 +205,7 @@ func (ss *SampSwap) Run() (err error) {
 			fname, err = sox.RetempoStretch(fname, ss.TempoIn, ss.TempoOut)
 		}
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	}
@@ -209,6 +213,7 @@ func (ss *SampSwap) Run() (err error) {
 	if ss.Sidechain > 0 {
 		fname, err = supercollider.Effect(fname, "sidechain", ss.BeatsOut/ss.Sidechain, 1, ss.TempoIn)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	}
@@ -217,6 +222,7 @@ func (ss *SampSwap) Run() (err error) {
 		fname, err = supercollider.Effect(fname, "filter_in_out",
 			ss.FilterIn*60/ss.TempoIn, ss.FilterOut*60/ss.TempoOut)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	}
@@ -225,6 +231,7 @@ func (ss *SampSwap) Run() (err error) {
 	if ss.Tapedeck {
 		fname, err = supercollider.Effect(fname, "tapedeck")
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	}
@@ -249,16 +256,19 @@ func (ss *SampSwap) rereverb(fname string) (fname2 string) {
 	piece, err := sox.Trim(ss.FileOriginal, 60/ss.TempoIn*start_beat-crossfade,
 		60/ss.TempoIn/4*length_beat+crossfade*2)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	// add reverberate to it
 	piece, err = supercollider.Effect(piece, "reverberate")
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	// reverse it
 	piece, err = sox.Reverse(piece)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	// paste it
@@ -281,11 +291,13 @@ func (ss *SampSwap) stutter(fname string) (fname2 string) {
 	piece, err := sox.Stutter(ss.FileOriginal, stutter_length,
 		start_pos, stutters, crossfade, 0.001)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	// add lpf ramp to it
 	piece, err = supercollider.Effect(piece, "lpf_rampup")
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	// paste it
@@ -308,12 +320,14 @@ func (ss *SampSwap) reverse(fname string) (fname2 string) {
 	piece, err := sox.Trim(fname, 60/ss.TempoIn*start_beat-crossfade,
 		60/ss.TempoIn*(length_beat)+2*crossfade)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 
 	// reverse it
 	piece, err = sox.Reverse(piece)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 
@@ -355,10 +369,12 @@ func (ss *SampSwap) pitch(fname string) (fname2 string) {
 		60/ss.TempoIn*start_beat-crossfade,
 		60/ss.TempoIn*length_beat+crossfade)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	piece, err = sox.Pitch(piece, rand.Intn(3)+1)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn*paste_beat, crossfade)

@@ -133,3 +133,102 @@ Seed = 0
       SilencePrepend = 0.0
       Tapedeck = false
 ```
+
+## todo
+
+- add one-word delay as effect:
+
+```supercollider
+(
+Routine {
+  SynthDef("oneWordDelay",{
+    arg in,out;
+    var snd,gate,sndDelay;
+    snd=In.ar(in,2);
+    // one word ping pong delay
+    gate=Lag.ar(DetectSilence.ar(snd,amp:0.01,time:60/175/4,doneAction:0),60/175/4).poll;
+    sndDelay=CombC.ar(snd,60/175*2,60/175*2,5)*0.25;
+    sndDelay=Pan2.ar(sndDelay,SinOsc.kr(175/60));
+    snd=SelectX.ar(gate,[snd,sndDelay]);
+    Out.ar(out,snd);
+  }).add;
+  s.sync;
+
+  SynthDef("simplePlayer",{
+    arg out,buf;
+    var snd;
+    snd=PlayBuf.ar(2,buf);
+    Out.ar(out,snd);
+  }).add;
+  s.sync;
+
+
+  ~delayBus = Bus.audio(s,2);
+  s.sync;
+  b = Buffer.read(s, "/home/zns/go/src/github.com/schollz/raw/close-to-me/track2.wav");
+  s.sync;
+
+  ~player=Synth.new("simplePlayer",[\out,~delayBus,\buf,b]);
+  s.sync;
+  ~oneWordDelay=Synth.after(~player,"oneWordDelay",[\out,0,\in,~delayBus]);
+  s.sync;
+
+}.play;
+)
+
+
+
+
+b=Buffer.read(s,"/home/zns/go/src/github.com/schollz/raw/close-to-me/track2.wav");
+b.play;
+(
+{
+  var snd=WhiteNoise.ar(0.1)!2;
+  snd=BPF.ar(snd,MouseX.kr(100,10000,1));
+  snd=Greyhole.ar(snd,2,1,2);
+  Out.ar(0,snd);
+}.play;
+)
+
+~buf = Buffer.alloc(s, s.sampleRate * 5);
+
+(
+{
+    var trig, freq;
+    var dry, snd, phase, iois;
+    var cumulDelay;
+    var decayFactor, lpfCutoff, numEchoes, ioiScale, ioiDecayFactor;
+
+    // play with these!
+    decayFactor = 0.65;
+    lpfCutoff = 500;
+    numEchoes = 16;
+    ioiScale = 0.4;
+    ioiDecayFactor = 0.75;
+
+    // example input -- you can substitute other stuff here
+    trig = Dust.ar(1);
+    dry = Pulse.ar(100 * TIRand.ar(1, 12, trig));
+    dry = dry * Decay2.ar(trig, 0.01, 0.2);
+
+    phase = DelTapWr.ar(~buf, dry);
+    iois = Array.geom(numEchoes, ioiScale, ioiDecayFactor);
+    cumulDelay = iois.sum;
+    (cumulDelay > ~buf.duration).if {
+        Error("use a larger buffer").throw;
+    };
+    snd = Silent.ar;
+    iois.reverse.do { |ioi|
+        snd = (snd + DelTapRd.ar(~buf, phase, cumulDelay, interp: 4)) * decayFactor;
+        // one-pole lowpass -- LPF was too aggressive
+        snd = OnePole.ar(snd, lpfCutoff / SampleRate.ir);
+        cumulDelay = cumulDelay - ioi;
+    };
+    snd = snd + dry;
+    
+    snd * 0.5!2;
+}.play;
+
+// contributors so far: Nathan Ho
+)
+```

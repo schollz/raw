@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/pelletier/go-toml"
 	log "github.com/schollz/logger"
+	"github.com/schollz/progressbar/v3"
 	"github.com/schollz/raw/src/sampswap"
 	"github.com/schollz/raw/src/sox"
 	"github.com/schollz/raw/src/supercollider"
@@ -63,11 +65,16 @@ func doCopy(src *sampswap.SampSwap) *sampswap.SampSwap {
 	return dst
 }
 
-func (s *Song) Generate() (err error) {
+func (s *Song) Generate(folder0 ...string) (err error) {
 	if s.Seed == 0 {
 		s.Seed = time.Now().UnixNano()
 	}
 	rand.Seed(s.Seed)
+
+	folder := "."
+	if len(folder0) > 0 {
+		folder = folder0[0]
+	}
 
 	// if there exist sampswap values, save them
 	sampswapParts := make(map[int]map[string]*sampswap.SampSwap)
@@ -157,9 +164,7 @@ func (s *Song) Generate() (err error) {
 				nextStart = s.Tracks[i].Parts[j+1].Start
 			}
 			s.Tracks[i].Parts[j].Length = nextStart - part.Start
-			// update the tempo out
 		}
-
 	}
 	b, _ := toml.Marshal(s)
 	fmt.Println(string(b))
@@ -178,7 +183,7 @@ func (s *Song) Generate() (err error) {
 	tracks := []string{}
 	for i, track := range s.Tracks {
 		if track.FileOut != "" {
-			newName := fmt.Sprintf("track%d.wav", i) // TODO change this
+			newName := path.Join(folder, fmt.Sprintf("track%d.wav", i)) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
 			os.Rename(track.FileOut, newName)
 			tracks = append(tracks, newName)
@@ -190,7 +195,7 @@ func (s *Song) Generate() (err error) {
 	if err != nil {
 		return
 	}
-	os.Rename(final, "song.wav")
+	os.Rename(final, path.Join(folder, "song.wav"))
 
 	// clean up everything
 	sox.Clean()
@@ -238,7 +243,14 @@ func (s *Song) CombineAll() (err error) {
 		jobs <- job{tracki: tracki}
 	}
 	close(jobs)
+	bar := progressbar.NewOptions(numJobs,
+		progressbar.OptionSetDescription("combine"),
+		progressbar.OptionShowIts(),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	)
 	for i := 0; i < numJobs; i++ {
+		bar.Add(1)
 		r := <-results
 		if r.err != nil {
 			// do something with error
@@ -293,7 +305,15 @@ func (s *Song) RunAll() (err error) {
 		}
 	}
 	close(jobs)
+
+	bar := progressbar.NewOptions(numJobs,
+		progressbar.OptionSetDescription("sampswap"),
+		progressbar.OptionShowIts(),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	)
 	for i := 0; i < numJobs; i++ {
+		bar.Add(1)
 		r := <-results
 		if r.err != nil {
 			// do something with error

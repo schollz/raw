@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	log "github.com/schollz/logger"
+	"github.com/schollz/progressbar/v3"
 )
 
 // TempDir is where the temporary intermediate files are held
@@ -78,7 +79,11 @@ func Clean() (err error) {
 	if err != nil {
 		return err
 	}
+	bar := progressbar.NewOptions(len(files),
+		progressbar.OptionSetDescription("cleaning"),
+		progressbar.OptionSetPredictTime(true))
 	for _, fname := range files {
+		bar.Add(1)
 		log.Tracef("removing %s", fname)
 		err = os.Remove(fname)
 		if err != nil {
