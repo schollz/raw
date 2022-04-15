@@ -112,7 +112,7 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 	}
 	fname2 = tmpfile()
 	durationScaling := "1"
-	if effect == "reverberate" {
+	if effect == "reverberate" || effect == "tapestop" {
 		if mathr.Float64() < 0.5 {
 			durationScaling = "2"
 		} else {
