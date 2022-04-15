@@ -180,6 +180,12 @@ func SilencePrepend(fname string, length float64) (fname2 string, err error) {
 	return
 }
 
+// FFT
+func FFT(fname string) (data string, err error) {
+	_, data, err = run("sox", fname, "-n", "stat", "-freq")
+	return
+}
+
 // SilenceTrim trims silence around a file
 func SilenceTrim(fname string) (fname2 string, err error) {
 	fname2 = Tmpfile()
