@@ -114,21 +114,40 @@ SynthDef("tapestop", {
 	snd = PlayBuf.ar(2,0,rate);
 	Out.ar(out, snd);
 }).load(nrtServer);
+SynthDef("totogglefilter", {
+	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
+	var duration=BufDur.ir(0);
+	var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
+	var bpm=f1;
+	var times=f2;
+    var seed=f3;
+    var rate,imp,tries,prob,env,length_time;
+    RandSeed.ir(Impulse.kr(0),seed);
+	rate=bpm/60;
+	imp=Impulse.kr(rate);
+	tries = duration/(60/bpm);
+	prob=times/tries;
+	length_time=Demand.kr(imp,0,Dseq([16,24,32]*60/bpm,inf));
+	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/3,length_time/3,length_time/3]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
+	snd = RLPF.ar(snd,LinExp.kr(1-env,0,1,100,20000),0.707);
+	Out.ar(out, snd);
+}).load(nrtServer);
 SynthDef("toggle", {
 	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
 	var duration=BufDur.ir(0);
 	var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
-	var gate,sndDelay;
 	var bpm=f1;
 	var times=f2;
-	var rate=bpm/60;
-	var imp=Impulse.kr(rate);
-	var tries = duration/(60/bpm);
-	var prob=times/tries;
-	var length_time=Demand.kr(imp,0,Dseq([2,2,2,2,4,4,4,8,8,16,32]*60/bpm,inf));
-	var env=EnvGen.ar(Env.new([0,1,1,0],[0.2,length_time-0.2-0.2,0.2]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
-	snd = snd * (1-env);
-	Out.ar(out, snd);
+    var seed=f3;
+    var rate,imp,tries,prob,env,length_time;
+    RandSeed.ir(Impulse.kr(0),seed);
+	rate=bpm/60;
+	imp=Impulse.kr(rate);
+	tries = duration/(60/bpm);
+	prob=times/tries;
+	length_time=Demand.kr(imp,0,Dseq([2,4,8,12,16,24,32]*60/bpm,inf));
+	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/12,length_time*10/12,length_time/12]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
+	Out.ar(out, snd*(1-env));
 }).load(nrtServer);
 SynthDef("oneworddelay", {
     arg out=0, dur=30,f1=120,f2=1,f3,f4;
@@ -137,7 +156,7 @@ SynthDef("oneworddelay", {
     var gate,sndDelay;
     var bpm=f1;
     gate=Lag.ar(DetectSilence.ar(snd,amp:0.01,time:60/bpm/4,doneAction:0),60/bpm/4);
-    sndDelay=CombC.ar(snd,2.0,60/bpm*2,5)*0.5;
+    sndDelay=CombC.ar(snd,60/bpm*2,60/bpm*2,5)*0.5;
     sndDelay=Pan2.ar(sndDelay,SinOsc.kr(bpm/60));
     snd=SelectX.ar(gate,[snd,sndDelay]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.0005,dur-0.001,0.0005]), doneAction:2);

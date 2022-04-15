@@ -29,12 +29,16 @@ type Song struct {
 }
 
 type Track struct {
-	Name           string
-	Structure      string   // "ABABC"
-	StructureArray []string // []string{"A","B"}
-	NameSync       string
-	Parts          []Part `toml:"part"`
-	FileOut        string
+	Name               string
+	Structure          string   // "ABABC"
+	StructureArray     []string // []string{"A","B"}
+	NameSync           string
+	Parts              []Part `toml:"part"`
+	FileOut            string
+	EffectToggle       float64
+	EffectToggleFilter float64
+	EffectTapestop     float64
+	EffectOneWordDelay bool
 }
 
 type Part struct {
@@ -179,13 +183,52 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 		return
 	}
 
+	// apply the track fx and
 	// rename the final file for each track
 	tracks := []string{}
+	seed := rand.Float64() * 10000000
 	for i, track := range s.Tracks {
 		if track.FileOut != "" {
+			if track.EffectOneWordDelay {
+				track.FileOut, err = supercollider.Effect(track.FileOut, "oneworddelay", s.Tempo)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}
+			if track.EffectToggle > 0 {
+				track.FileOut, err = supercollider.Effect(track.FileOut, "toggle", s.Tempo, track.EffectToggle, seed)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}
+			if track.EffectToggleFilter > 0 {
+				track.FileOut, err = supercollider.Effect(track.FileOut, "togglefilter", s.Tempo, track.EffectToggleFilter, seed)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}
+			if track.EffectTapestop > 0 {
+				track.FileOut, err = supercollider.Effect(track.FileOut, "tapestop", s.Tempo, track.EffectTapestop, seed)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}
+			track.FileOut, err = sox.SilenceTrimEnd(track.FileOut)
+			if err != nil {
+				log.Error(err)
+				return
+			}
 			newName := path.Join(folder, fmt.Sprintf("track%d.wav", i)) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
-			os.Rename(track.FileOut, newName)
+			err = os.Rename(track.FileOut, newName)
+			if err != nil {
+				log.Error(err)
+				return
+			}
 			tracks = append(tracks, newName)
 		}
 	}

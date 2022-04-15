@@ -187,6 +187,13 @@ func SilenceTrim(fname string) (fname2 string, err error) {
 	return
 }
 
+// SilenceTrimEnd trims silence from end of file
+func SilenceTrimEnd(fname string) (fname2 string, err error) {
+	fname2 = Tmpfile()
+	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse")
+	return
+}
+
 // Trim will trim the audio from the start point (with optional length)
 func Trim(fname string, start float64, length ...float64) (fname2 string, err error) {
 	fname2 = Tmpfile()
