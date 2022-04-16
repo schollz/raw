@@ -78,7 +78,8 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 
 	folder := "."
 	if len(folder0) > 0 {
-		folder = folder0[0]
+		os.Chdir(folder0[0])
+		// folder = folder0[0]
 	}
 
 	// if there exist sampswap values, save them
