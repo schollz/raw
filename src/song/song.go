@@ -3,6 +3,7 @@ package song
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -27,6 +28,7 @@ type Song struct {
 	Seed           int64
 	Tracks         []Track `toml:"track"`
 	EffectTapestop float64
+	randomFileList map[string]string
 }
 
 type Track struct {
@@ -49,7 +51,8 @@ type Part struct {
 	SampSwap *sampswap.SampSwap `toml:"ss"`     // original sample for this part
 }
 
-func chooseRandomFile(fileGlob string) (fname string, err error) {
+// chooseRandomFile will try to choose by sampling without replacement
+func (s *Song) chooseRandomFile(fileGlob string) (fname string, err error) {
 	files, err := filepath.Glob(fileGlob)
 	if err != nil {
 		return
@@ -58,8 +61,17 @@ func chooseRandomFile(fileGlob string) (fname string, err error) {
 		err = fmt.Errorf("no matching files")
 		return
 	}
-	n := rand.Intn(len(files))
-	fname = files[n]
+	for i := 0; i < 10; i++ {
+		n := rand.Intn(len(files))
+		fname = files[n]
+		if _, ok := s.randomFileList[fileGlob]; !ok {
+			s.randomFileList[fileGlob] = ""
+			break
+		} else if !strings.Contains(s.randomFileList[fileGlob], fname) {
+			break
+		}
+	}
+	s.randomFileList[fileGlob] += fname
 	return
 }
 
@@ -71,6 +83,7 @@ func doCopy(src *sampswap.SampSwap) *sampswap.SampSwap {
 }
 
 func (s *Song) Generate(folder0 ...string) (err error) {
+	s.randomFileList = make(map[string]string)
 	if s.Seed == 0 {
 		s.Seed = time.Now().UnixNano()
 	}
@@ -144,7 +157,7 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 		fileIns := make(map[string]string)
 		for j, part := range s.Tracks[i].Parts {
 			if strings.Contains(s.Tracks[i].Parts[j].SampSwap.FileIn, "*") {
-				s.Tracks[i].Parts[j].SampSwap.FileIn, err = chooseRandomFile(s.Tracks[i].Parts[j].SampSwap.FileIn)
+				s.Tracks[i].Parts[j].SampSwap.FileIn, err = s.chooseRandomFile(s.Tracks[i].Parts[j].SampSwap.FileIn)
 				if err != nil {
 					return
 				}
@@ -173,7 +186,8 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 		}
 	}
 	b, _ := toml.Marshal(s)
-	fmt.Println(string(b))
+	ioutil.WriteFile("final.toml", b, 0644)
+	// fmt.Println(string(b))
 
 	// run all the song components
 	if err = s.RunAll(); err != nil {
@@ -196,7 +210,7 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 	tracks := []string{}
 	seed := rand.Float64() * 10000000
 	log.Debugf("seed: %f", seed)
-	for i, track := range s.Tracks {
+	for _, track := range s.Tracks {
 		bar.Add(1)
 		if track.FileOut != "" {
 			if track.EffectOneWordDelay {
@@ -232,7 +246,7 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 				log.Error(err)
 				return
 			}
-			newName := path.Join(folder, fmt.Sprintf("track%d.wav", i)) // TODO change this
+			newName := path.Join(folder, fmt.Sprintf("%s.wav", track.Name)) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
 			err = os.Rename(track.FileOut, newName)
 			if err != nil {
@@ -344,8 +358,9 @@ func (s *Song) RunAll() (err error) {
 				r.tracki = j.tracki
 				r.parti = j.parti
 				s.Tracks[j.tracki].Parts[j.parti].SampSwap.BeatsOut = s.Tracks[j.tracki].Parts[j.parti].Length * 4
-				// TODO: add silence to tracks if they aren't the first track?
-				r.err = s.Tracks[j.tracki].Parts[j.parti].SampSwap.Run()
+				if s.Tracks[j.tracki].Parts[j.parti].SampSwap.BeatsOut > 0 && s.Tracks[j.tracki].Parts[j.parti].SampSwap.FileIn != "" {
+					r.err = s.Tracks[j.tracki].Parts[j.parti].SampSwap.Run()
+				}
 				results <- r
 			}
 		}(jobs, results)

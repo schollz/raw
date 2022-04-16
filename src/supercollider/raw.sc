@@ -63,7 +63,7 @@ SynthDef("filter_in_out", {
 }).load(nrtServer);
 SynthDef("tapedeck", {
     arg out=0,  dur=30,f1,f2,f3,f4,
-    amp=0.9,tape_wet=0.90,tape_bias=0.9,saturation=0.9,drive=0.9,
+    amp=0.7,tape_wet=0.90,tape_bias=0.9,saturation=0.9,drive=0.9,
     tape_oversample=1,mode=0,
     dist_wet=0.05,drivegain=0.5,dist_bias=0.5,lowgain=0.1,highgain=0.1,
     shelvingfreq=600,dist_oversample=1,

@@ -26,6 +26,8 @@ var TempPrefix = "sox"
 // TempType is the type of file to be generated (should be "wav")
 var TempType = "wav"
 
+var GarbageCollection = false
+
 func Tmpfile() string {
 	randBytes := make([]byte, 16)
 	rand.Read(randBytes)
@@ -154,7 +156,9 @@ func SilenceAppend(fname string, length float64) (fname2 string, err error) {
 	if err != nil {
 		return
 	}
-
+	if GarbageCollection {
+		os.Remove(fname)
+	}
 	return
 }
 
@@ -410,7 +414,7 @@ func SampleRate(fname string, srCh ...int) (fname2 string, err error) {
 // PostProcess
 func PostProcess(fname string, gain float64) (fname2 string, err error) {
 	fname2 = Tmpfile()
-	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse", "norm", "gain", fmt.Sprint(gain))
+	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse", "gain", fmt.Sprint(gain))
 	return
 }
 

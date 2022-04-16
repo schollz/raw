@@ -53,7 +53,7 @@ func Init() (ss *SampSwap) {
 func (ss *SampSwap) Run() (err error) {
 	if ss.FileIn == "" {
 		err = fmt.Errorf("no input file")
-		fmt.Println("HI")
+		return
 	}
 	if err != nil {
 		log.Error(err)
@@ -73,6 +73,13 @@ func (ss *SampSwap) Run() (err error) {
 
 	// convert to 48000
 	fname, err = sox.SampleRate(ss.FileIn, 48000)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// reduce the gain a little bit
+	fname, err = sox.Gain(fname, -6.0)
 	if err != nil {
 		log.Error(err)
 		return
@@ -119,7 +126,7 @@ func (ss *SampSwap) Run() (err error) {
 	// find closest multiple of tempoout to tempoin
 	foodiff := 1000000.0
 	bestBPMDivision := 1.0
-	for _, bpmDivision := range []float64{1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8} {
+	for _, bpmDivision := range []float64{0.125, 0.25, 0.5, 1, 2, 4, 8} {
 		if math.Abs(bpmDivision*ss.TempoOut-ss.TempoIn) < foodiff {
 			foodiff = math.Abs(bpmDivision*ss.TempoOut - ss.TempoIn)
 			bestBPMDivision = bpmDivision
@@ -129,16 +136,18 @@ func (ss *SampSwap) Run() (err error) {
 	log.Debugf("beats out (requested): %f", ss.BeatsOut)
 	ss.TempoOut = ss.TempoOut * bestBPMDivision
 	ss.BeatsOut = ss.BeatsOut * bestBPMDivision
+	log.Debugf("best bpm division: %f", bestBPMDivision)
 	log.Debugf("tempo out: %f bpm", ss.TempoOut)
 	log.Debugf("beats out (determined): %f", ss.BeatsOut)
 
 	// add repeats until we reach the number of wanted beats
 	// subtract off the beats of silence
-	ss.BeatsOut = ss.BeatsOut - ss.SilencePrepend - ss.SilenceAppend
-	if ss.BeatsOut < 4 {
-		err = fmt.Errorf("too much silence!")
-		log.Error(err)
-		return
+	if ss.BeatsOut-ss.SilencePrepend-ss.SilenceAppend > 0 {
+		ss.BeatsOut = ss.BeatsOut - ss.SilencePrepend - ss.SilenceAppend
+	}
+	if ss.BeatsOut < 1 {
+		err = fmt.Errorf("too much silence in '%s' (%f beats)", ss.FileIn, ss.BeatsOut)
+		panic(err)
 	}
 	beats := math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
 	for {
