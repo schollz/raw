@@ -22,10 +22,11 @@ import (
 )
 
 type Song struct {
-	Tempo  float64
-	Bars   float64 // each bar is 4 beats
-	Seed   int64
-	Tracks []Track `toml:"track"`
+	Tempo          float64
+	Bars           float64 // each bar is 4 beats
+	Seed           int64
+	Tracks         []Track `toml:"track"`
+	EffectTapestop float64
 }
 
 type Track struct {
@@ -37,8 +38,8 @@ type Track struct {
 	FileOut            string
 	EffectToggle       float64
 	EffectToggleFilter float64
-	EffectTapestop     float64
 	EffectOneWordDelay bool
+	Gain               float64
 }
 
 type Part struct {
@@ -185,9 +186,17 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 
 	// apply the track fx and
 	// rename the final file for each track
+	bar := progressbar.NewOptions(len(s.Tracks),
+		progressbar.OptionSetDescription("combine"),
+		progressbar.OptionShowIts(),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	)
 	tracks := []string{}
 	seed := rand.Float64() * 10000000
+	log.Debugf("seed: %f", seed)
 	for i, track := range s.Tracks {
+		bar.Add(1)
 		if track.FileOut != "" {
 			if track.EffectOneWordDelay {
 				track.FileOut, err = supercollider.Effect(track.FileOut, "oneworddelay", s.Tempo)
@@ -210,14 +219,14 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 					return
 				}
 			}
-			if track.EffectTapestop > 0 {
-				track.FileOut, err = supercollider.Effect(track.FileOut, "tapestop", s.Tempo, track.EffectTapestop, seed)
+			if s.EffectTapestop > 0 {
+				track.FileOut, err = supercollider.Effect(track.FileOut, "tapestop", s.Tempo, s.EffectTapestop, seed)
 				if err != nil {
 					log.Error(err)
 					return
 				}
 			}
-			track.FileOut, err = sox.SilenceTrimEnd(track.FileOut)
+			track.FileOut, err = sox.PostProcess(track.FileOut, track.Gain)
 			if err != nil {
 				log.Error(err)
 				return

@@ -186,6 +186,13 @@ func FFT(fname string) (data string, err error) {
 	return
 }
 
+// Norm normalizes the audio
+func Norm(fname string) (fname2 string, err error) {
+	fname2 = Tmpfile()
+	_, _, err = run("sox", fname, fname2, "norm")
+	return
+}
+
 // SilenceTrim trims silence around a file
 func SilenceTrim(fname string) (fname2 string, err error) {
 	fname2 = Tmpfile()
@@ -397,6 +404,13 @@ func SampleRate(fname string, srCh ...int) (fname2 string, err error) {
 	}
 	fname2 = Tmpfile()
 	_, _, err = run("sox", fname, fname2, "rate", fmt.Sprint(sampleRate))
+	return
+}
+
+// PostProcess
+func PostProcess(fname string, gain float64) (fname2 string, err error) {
+	fname2 = Tmpfile()
+	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse", "norm", "gain", fmt.Sprint(gain))
 	return
 }
 

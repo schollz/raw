@@ -108,13 +108,13 @@ SynthDef("tapestop", {
 	imp=Impulse.kr(rate);
 	tries = duration/(60/bpm);
 	prob=times/tries;
-	length_time=Demand.kr(imp,0,Dseq([2,4,8,16]*60/bpm,inf));
-	env=EnvGen.kr(Env.new([0,1-(0.125/2),1-(0.125/2),0],[length_time/4,length_time/4,length_time/2],\sine),imp*(LFNoise0.kr(rate).range(0,1)<prob));
+	length_time=Demand.kr(imp,0,Dseq([1,2,4,8,16]*60/bpm,inf));
+	env=EnvGen.kr(Env.new([0,1-(0.125/2),1-(0.125/2),0],[length_time/9*4,length_time/9,length_time/9*4],\sine),imp*(LFNoise0.kr(rate).range(0,1)<prob));
 	rate=BufRateScale.ir(0)*(1-env);
 	snd = PlayBuf.ar(2,0,rate);
 	Out.ar(out, snd);
 }).load(nrtServer);
-SynthDef("totogglefilter", {
+SynthDef("togglefilter", {
 	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
 	var duration=BufDur.ir(0);
 	var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
@@ -123,9 +123,9 @@ SynthDef("totogglefilter", {
     var seed=f3;
     var rate,imp,tries,prob,env,length_time;
     RandSeed.ir(Impulse.kr(0),seed);
-	rate=bpm/60;
+	rate=bpm/60/16;
 	imp=Impulse.kr(rate);
-	tries = duration/(60/bpm);
+	tries = duration/rate;
 	prob=times/tries;
 	length_time=Demand.kr(imp,0,Dseq([16,24,32]*60/bpm,inf));
 	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/3,length_time/3,length_time/3]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
@@ -141,9 +141,9 @@ SynthDef("toggle", {
     var seed=f3;
     var rate,imp,tries,prob,env,length_time;
     RandSeed.ir(Impulse.kr(0),seed);
-	rate=bpm/60;
+	rate=bpm/60/16;
 	imp=Impulse.kr(rate);
-	tries = duration/(60/bpm);
+	tries = duration/rate;
 	prob=times/tries;
 	length_time=Demand.kr(imp,0,Dseq([2,4,8,12,16,24,32]*60/bpm,inf));
 	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/12,length_time*10/12,length_time/12]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
