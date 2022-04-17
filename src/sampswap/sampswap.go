@@ -43,6 +43,7 @@ type SampSwap struct {
 	SilenceAppend       float64 // number of beats
 	ReTempoNone         bool    // ignores retempoing
 	ReTempoSpeed        bool    // ignores pitch
+	NoSlow              bool
 	showProgress        bool
 	doStopSuperCollider bool
 }
@@ -127,10 +128,13 @@ func (ss *SampSwap) Run() (err error) {
 	// find closest multiple of tempoout to tempoin
 	foodiff := 100000.0
 	bestBPMDivision := 1.0
-	for _, bpmDivision := range []float64{8, 4, 2, 1, 0.5, 0.25, 0.125} {
+	bpmDivisions := []float64{8, 4, 2, 1, 0.5, 0.25, 0.125}
+	for _, bpmDivision := range bpmDivisions {
 		if math.Abs(bpmDivision*ss.TempoOut-ss.TempoIn) < foodiff {
-			foodiff = math.Abs(bpmDivision*ss.TempoOut - ss.TempoIn)
-			bestBPMDivision = bpmDivision
+			if ss.NoSlow == false || (bpmDivision*ss.TempoOut > ss.TempoIn) {
+				foodiff = math.Abs(bpmDivision*ss.TempoOut - ss.TempoIn)
+				bestBPMDivision = bpmDivision
+			}
 		}
 	}
 	log.Debugf("tempo in: %f bpm", ss.TempoIn)
