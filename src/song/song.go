@@ -192,23 +192,26 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 
 	// run all the song components
 	if err = s.RunAll(); err != nil {
+		log.Error(err)
 		return
 	}
 
 	// combine all the song components
 	if err = s.CombineAll(); err != nil {
+		log.Error(err)
 		return
 	}
 
 	// depopping
 	if err = s.DepopAll(); err != nil {
+		log.Error(err)
 		return
 	}
 
 	// apply the track fx and
 	// rename the final file for each track
 	bar := progressbar.NewOptions(len(s.Tracks),
-		progressbar.OptionSetDescription("combine"),
+		progressbar.OptionSetDescription("effects"),
 		progressbar.OptionShowIts(),
 		progressbar.OptionSetPredictTime(true),
 		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
@@ -217,7 +220,6 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 	seed := rand.Float64() * 10000000
 	log.Debugf("seed: %f", seed)
 	for _, track := range s.Tracks {
-		bar.Add(1)
 		if track.FileOut != "" {
 			if track.EffectOneWordDelay {
 				track.FileOut, err = supercollider.Effect(track.FileOut, "oneworddelay", s.Tempo)
@@ -261,11 +263,13 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 			}
 			tracks = append(tracks, newName)
 		}
+		bar.Add(1)
 	}
 
 	// make a mix
 	final, err := sox.Mix(tracks...)
 	if err != nil {
+		log.Error(err)
 		return
 	}
 	os.Rename(final, path.Join(folder, "song.wav"))
@@ -304,15 +308,10 @@ func (s *Song) DepopAll() (err error) {
 		jobs <- job{tracki: tracki}
 	}
 	close(jobs)
-	bar := progressbar.NewOptions(numJobs,
-		progressbar.OptionSetDescription("depop"),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	)
+
 	for i := 0; i < numJobs; i++ {
 		r := <-results
-		bar.Add(1)
+		log.Debugf("depopped track %d", r.tracki)
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)
@@ -342,11 +341,22 @@ func (s *Song) CombineAll() (err error) {
 				var r result
 				r.tracki = j.tracki
 				fileList := []string{}
+				fmt.Printf("combining %d parts for track %d\n", len(s.Tracks[j.tracki].Parts), j.tracki)
 				for _, part := range s.Tracks[j.tracki].Parts {
 					if part.SampSwap != nil {
 						if part.SampSwap.FileOut != "" {
-							fileList = append(fileList, part.SampSwap.FileOut)
+							_, errOpen := os.Stat(part.SampSwap.FileOut)
+							if errOpen != nil {
+								// handle the case where the file doesn't exist
+								log.Errorf("%s does not exist!", part.SampSwap.FileOut)
+							} else {
+								fileList = append(fileList, part.SampSwap.FileOut)
+							}
+						} else {
+							log.Error("part FileOut is empty!")
 						}
+					} else {
+						log.Errorf("part sampswap is nil! %+v", part)
 					}
 				}
 				if len(fileList) > 1 {
@@ -354,6 +364,7 @@ func (s *Song) CombineAll() (err error) {
 				} else if len(fileList) == 1 {
 					s.Tracks[j.tracki].FileOut = fileList[0]
 				}
+				fmt.Printf("combined %d parts for track %d\n", len(s.Tracks[j.tracki].Parts), j.tracki)
 				results <- r
 			}
 		}(jobs, results)
@@ -362,15 +373,15 @@ func (s *Song) CombineAll() (err error) {
 		jobs <- job{tracki: tracki}
 	}
 	close(jobs)
-	bar := progressbar.NewOptions(numJobs,
-		progressbar.OptionSetDescription("combine"),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	)
+	// bar := progressbar.NewOptions(numJobs,
+	// 	progressbar.OptionSetDescription("combine"),
+	// 	progressbar.OptionShowIts(),
+	// 	progressbar.OptionSetPredictTime(true),
+	// 	progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	// )
 	for i := 0; i < numJobs; i++ {
-		bar.Add(1)
 		r := <-results
+		// bar.Add(1)
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)
@@ -426,15 +437,15 @@ func (s *Song) RunAll() (err error) {
 	}
 	close(jobs)
 
-	bar := progressbar.NewOptions(numJobs,
-		progressbar.OptionSetDescription("sampswap"),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	)
+	// bar := progressbar.NewOptions(numJobs,
+	// 	progressbar.OptionSetDescription("sampswap"),
+	// 	progressbar.OptionShowIts(),
+	// 	progressbar.OptionSetPredictTime(true),
+	// 	progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	// )
 	for i := 0; i < numJobs; i++ {
-		bar.Add(1)
 		r := <-results
+		// bar.Add(1)
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)

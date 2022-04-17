@@ -3,6 +3,7 @@ package sox
 import (
 	"bytes"
 	"crypto/rand"
+	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -14,14 +15,12 @@ import (
 	"strconv"
 	"strings"
 
-	_ "embed"
-
 	log "github.com/schollz/logger"
 	"github.com/schollz/progressbar/v3"
 )
 
-// go:embed depop.py
-var depoppy string
+//go:embed depop.py
+var depoppy []byte
 
 // TempDir is where the temporary intermediate files are held
 var TempDir = os.TempDir()
@@ -205,12 +204,19 @@ func Depop(fname string) (fname2 string, err error) {
 	if err != nil {
 		return
 	}
-	depopfile.Write([]byte(depoppy))
+	depopfile.Write(depoppy)
 	depopfile.Close()
 	defer os.Remove(depopfile.Name())
 
 	fname2 = Tmpfile()
-	_, _, err = run("python3", depopfile.Name(), fname, fname2)
+	stdout, stderr, err := run("python3", depopfile.Name(), fname, fname2)
+	if err != nil {
+		log.Errorf("stdout: %s", stdout)
+		log.Errorf("stderr: %s", stderr)
+	} else {
+		log.Tracef("stdout: %s", stdout)
+		log.Tracef("stderr: %s", stderr)
+	}
 	return
 }
 

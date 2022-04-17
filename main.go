@@ -10,6 +10,7 @@ import (
 	log "github.com/schollz/logger"
 	"github.com/schollz/raw/src/sampswap"
 	"github.com/schollz/raw/src/song"
+	"github.com/schollz/raw/src/sox"
 	"github.com/urfave/cli/v2"
 )
 
@@ -159,6 +160,39 @@ func main() {
 						log.SetLevel("info")
 					}
 					return ss.Run()
+				},
+			},
+			{
+				Name:  "depop",
+				Usage: "depop file",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Required: true,
+						Name:     "in",
+						Usage:    "input file",
+					},
+					&cli.StringFlag{
+						Required: true,
+						Name:     "out",
+						Usage:    "output file",
+					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "debug mode",
+					},
+				},
+				Action: func(c *cli.Context) (err error) {
+					if c.Bool("debug") {
+						log.SetLevel("debug")
+					} else {
+						log.SetLevel("info")
+					}
+					fname2, err := sox.Depop(c.String("in"))
+					if err != nil {
+						return
+					}
+					err = os.Rename(fname2, c.String("out"))
+					return
 				},
 			},
 		},
