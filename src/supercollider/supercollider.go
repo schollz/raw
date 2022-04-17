@@ -141,9 +141,9 @@ func Effect(fname string, effect string, fs ...float64) (fname2 string, err erro
 
 	// wait for the file to be written
 	for {
-		time.Sleep(25 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		if _, err := os.Stat(scDoneFile); err == nil {
-			log.Debug("supercollider is done")
+			log.Trace("supercollider is done")
 			break
 		}
 	}
@@ -205,11 +205,11 @@ func Start() (err error) {
 		for {
 			// check whether the "ready" file exists from the sclang server
 			if _, err := os.Stat(READYFILE); err == nil {
-				log.Debug("supercollider is ready")
+				log.Trace("supercollider is ready")
 				ready = true
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 	return

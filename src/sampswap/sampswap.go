@@ -124,9 +124,9 @@ func (ss *SampSwap) Run() (err error) {
 
 	// TODO: make optional
 	// find closest multiple of tempoout to tempoin
-	foodiff := 1000000.0
+	foodiff := 100000.0
 	bestBPMDivision := 1.0
-	for _, bpmDivision := range []float64{0.125, 0.25, 0.5, 1, 2, 4, 8} {
+	for _, bpmDivision := range []float64{8, 4, 2, 1, 0.5, 0.25, 0.125} {
 		if math.Abs(bpmDivision*ss.TempoOut-ss.TempoIn) < foodiff {
 			foodiff = math.Abs(bpmDivision*ss.TempoOut - ss.TempoIn)
 			bestBPMDivision = bpmDivision
