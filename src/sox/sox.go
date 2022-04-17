@@ -157,7 +157,9 @@ func SilenceAppend(fname string, length float64) (fname2 string, err error) {
 		return
 	}
 	if GarbageCollection {
-		os.Remove(fname)
+		go func() {
+			os.Remove(fname)
+		}()
 	}
 	return
 }
