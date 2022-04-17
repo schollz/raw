@@ -21,6 +21,7 @@ import (
 	"github.com/schollz/raw/src/sampswap"
 	"github.com/schollz/raw/src/sox"
 	"github.com/schollz/raw/src/supercollider"
+	"github.com/schollz/raw/src/utils"
 )
 
 type Song struct {
@@ -251,14 +252,14 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 			}
 			newName := path.Join(folder, fmt.Sprintf("%s.wav", track.Name)) // TODO change this
 			log.Debugf("%s -> %s", track.FileOut, newName)
-			err = os.Rename(track.FileOut, newName)
+			err = utils.Copy(track.FileOut, newName)
 			if err != nil {
 				log.Error(err)
 				return
 			}
 			tracks = append(tracks, newName)
 		}
-		fmt.Print(track.Name + ".")
+		fmt.Print(track.Name + "..")
 	}
 	fmt.Println("done.")
 
@@ -271,7 +272,7 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 	}
 	fmt.Println("done.")
 
-	os.Rename(final, path.Join(folder, "song.wav"))
+	utils.Copy(final, path.Join(folder, "song.wav"))
 
 	// clean up everything
 	sox.Clean()
@@ -324,6 +325,10 @@ func (s *Song) DepopAll() (err error) {
 }
 
 func (s *Song) CombineAll() (err error) {
+	fmt.Print("combining parts...")
+	defer func() {
+		fmt.Println("done.")
+	}()
 	// start worker group to generate the parts for each track
 	numJobs := len(s.Tracks)
 	type job struct {
@@ -343,7 +348,6 @@ func (s *Song) CombineAll() (err error) {
 				var r result
 				r.tracki = j.tracki
 				fileList := []string{}
-				fmt.Printf("combining %d parts for track %d\n", len(s.Tracks[j.tracki].Parts), j.tracki)
 				for _, part := range s.Tracks[j.tracki].Parts {
 					if part.SampSwap != nil {
 						if part.SampSwap.FileOut != "" {
@@ -366,7 +370,6 @@ func (s *Song) CombineAll() (err error) {
 				} else if len(fileList) == 1 {
 					s.Tracks[j.tracki].FileOut = fileList[0]
 				}
-				fmt.Printf("combined %d parts for track %d\n", len(s.Tracks[j.tracki].Parts), j.tracki)
 				results <- r
 			}
 		}(jobs, results)
@@ -383,6 +386,7 @@ func (s *Song) CombineAll() (err error) {
 	// )
 	for i := 0; i < numJobs; i++ {
 		r := <-results
+		fmt.Print(s.Tracks[r.tracki].Name + "..")
 		// bar.Add(1)
 		if r.err != nil {
 			// do something with error
@@ -394,6 +398,7 @@ func (s *Song) CombineAll() (err error) {
 }
 
 func (s *Song) RunAll() (err error) {
+
 	// start worker group to generate the parts for each track
 	numJobs := 0
 	for _, track := range s.Tracks {
@@ -403,6 +408,14 @@ func (s *Song) RunAll() (err error) {
 			}
 		}
 	}
+	fmt.Printf("sampswapping %d parts...\n", numJobs)
+	bar := progressbar.NewOptions(numJobs,
+		progressbar.OptionShowIts(),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionOnCompletion(func() { fmt.Print(" done.\n") }),
+		progressbar.OptionSetRenderBlankState(true),
+	)
+
 	type job struct {
 		tracki int
 		parti  int
@@ -439,19 +452,9 @@ func (s *Song) RunAll() (err error) {
 	}
 	close(jobs)
 
-	// bar := progressbar.NewOptions(numJobs,
-	// 	progressbar.OptionSetDescription("sampswap"),
-	// 	progressbar.OptionShowIts(),
-	// 	progressbar.OptionSetPredictTime(true),
-	// 	progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	// )
 	for i := 0; i < numJobs; i++ {
 		r := <-results
-<<<<<<< HEAD
 		bar.Add(1)
-=======
-		// bar.Add(1)
->>>>>>> 75f689a0806fe0b380354659d506b5c630ef58ae
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)

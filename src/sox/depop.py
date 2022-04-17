@@ -70,7 +70,7 @@ def tmpfile() -> str:
     random_string = "".join(
         random.choices(string.ascii_uppercase + string.digits, k=10)
     )
-    return "sox" + random_string + ".wav"
+    return os.path.join(tempfile.gettempdir(), "sox" + random_string + ".wav")
 
 
 def copypaste(fname, fname2, startPos, endPos, pastePos, crossfade):

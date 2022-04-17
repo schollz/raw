@@ -3,9 +3,10 @@ test:
 	LOGGER=debug go test -v -cover ./...
 
 docker-run:
-	docker run --rm -ti raw:latest
+	docker run --rm -v `pwd`/example:/data -e CONFIGDIR='1' raw
 
-docker-build:
+docker:
+	go build -v
 	docker build -t raw . 
 
 samples:

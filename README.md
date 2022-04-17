@@ -8,8 +8,15 @@ in this current process I'm focusing on effects and structure. I plan on only us
 
 ## requirements
 
+- python3 numpy+scipy
 - sox
 - supercollider
+
+you can install python3 anyway you want, and then install the dependencies with:
+
+```
+python3 -m pip install numpy scipy
+```
 
 `sox` [can be downloaded here](https://sourceforge.net/projects/sox/) (or Linux: `apt get sox`).
 

@@ -15,6 +15,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 	"github.com/schollz/raw/src/sox"
 	"github.com/schollz/raw/src/supercollider"
+	"github.com/schollz/raw/src/utils"
 )
 
 type SampSwap struct {
@@ -250,7 +251,7 @@ func (ss *SampSwap) Run() (err error) {
 		ss.FileOut = sox.Tmpfile()
 	}
 
-	err = os.Rename(fname, ss.FileOut)
+	err = utils.Copy(fname, ss.FileOut)
 	return
 }
 
@@ -297,20 +298,23 @@ func (ss *SampSwap) stutter(fname string) (fname2 string) {
 	paste_pos := start_pos - (stutters-1)*stutter_length
 	crossfade := 0.01
 	// do the stuter
-	piece, err := sox.Stutter(ss.FileOriginal, stutter_length,
+	piece1, err := sox.Stutter(ss.FileOriginal, stutter_length,
 		start_pos, stutters, crossfade, 0.001)
+	defer os.Remove(piece1)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+
 	// add lpf ramp to it
-	piece, err = supercollider.Effect(piece, "lpf_rampup")
+	piece2, err := supercollider.Effect(piece1, "lpf_rampup")
+	defer os.Remove(piece2)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	// paste it
-	fname, err = sox.Paste(fname, piece, paste_pos, crossfade)
+	fname, err = sox.Paste(fname, piece2, paste_pos, crossfade)
 	if err == nil {
 		fname2 = fname
 	}
@@ -326,22 +330,24 @@ func (ss *SampSwap) reverse(fname string) (fname2 string) {
 	crossfade := 0.05
 
 	// grab a piece
-	piece, err := sox.Trim(fname, 60/ss.TempoIn*start_beat-crossfade,
+	piece1, err := sox.Trim(fname, 60/ss.TempoIn*start_beat-crossfade,
 		60/ss.TempoIn*(length_beat)+2*crossfade)
+	defer os.Remove(piece1)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	// reverse it
-	piece, err = sox.Reverse(piece)
+	piece2, err := sox.Reverse(piece1)
+	defer os.Remove(piece2)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	// paste it
-	fname, err = sox.Paste(fname, piece, 60/ss.TempoIn*paste_beat, crossfade)
+	fname, err = sox.Paste(fname, piece2, 60/ss.TempoIn*paste_beat, crossfade)
 	if err == nil {
 		fname2 = fname
 	}

@@ -16,7 +16,7 @@ SynthDef("lpf_rampup", {
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     snd=LPF.ar(snd,XLine.kr(200,20000,duration));
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("lpf_rampdown", {
     arg out=0,  dur=30, f1,f2,f3,f4;
@@ -24,7 +24,7 @@ SynthDef("lpf_rampdown", {
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     snd=LPF.ar(snd,XLine.kr(20000,200,duration));
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("dec_ramp", {
     arg out=0,  dur=30, f1,f2,f3,f4;
@@ -32,7 +32,7 @@ SynthDef("dec_ramp", {
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     snd=SelectX.ar(Line.kr(0,1,duration/4),[snd,Decimator.ar(snd,8000,8)]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("dec", {
     arg out=0,  dur=30, f1,f2,f3,f4;
@@ -40,16 +40,15 @@ SynthDef("dec", {
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     snd=Decimator.ar(snd,8000,8);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("reverberate", {
     arg out=0,  dur=30, f1,f2,f3,f4;
     var duration=BufDur.ir(0);
     var snd = PlayBuf.ar(2,0,BufRateScale.kr(0));
     snd=SelectX.ar(XLine.kr(0,1,duration/4),[snd,Greyhole.ar(snd* EnvGen.ar(Env.new([0, 1, 1, 0], [0.1,dur-0.2,0.1]), doneAction:2))]);
-    snd=LeakDC.ar(snd);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.1,dur-0.2,0.1]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("filter_in_out", {
     arg out=0,  dur=30, f1,f2,f3,f4;
@@ -59,7 +58,7 @@ SynthDef("filter_in_out", {
         LinExp.kr(EnvGen.kr(Env.new([0.1, 1, 1, 0.1], [f1,dur-f1-f2,f2])),0.1,1,100,20000),
         0.6);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("tapedeck", {
     arg out=0,  dur=30,f1,f2,f3,f4,
@@ -77,7 +76,7 @@ SynthDef("tapedeck", {
     snd=RHPF.ar(snd,hpf,hpfqr);
     snd=RLPF.ar(snd,lpf,lpfqr);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("bitcrush", {
     arg out=0,  dur=30,f1=1,f2=1,f3,f4;
@@ -93,7 +92,7 @@ SynthDef("bitcrush", {
 
     snd=SelectX.ar(bc,[snd,bitcrushed]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("tapestop", {
 	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
@@ -112,7 +111,7 @@ SynthDef("tapestop", {
 	env=EnvGen.kr(Env.new([0,1-(0.125/2),1-(0.125/2),0],[length_time/9*4,length_time/9,length_time/9*4],\sine),imp*(LFNoise0.kr(rate).range(0,1)<prob));
 	rate=BufRateScale.ir(0)*(1-env);
 	snd = PlayBuf.ar(2,0,rate);
-	Out.ar(out, snd);
+	Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("togglefilter", {
 	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
@@ -130,7 +129,7 @@ SynthDef("togglefilter", {
 	length_time=Demand.kr(imp,0,Dseq([16,24,32]*60/bpm,inf));
 	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/3,length_time/3,length_time/3]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
 	snd = RLPF.ar(snd,LinExp.kr(1-env,0,1,100,20000),0.707);
-	Out.ar(out, snd);
+	Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("toggle", {
 	arg out=0, dur=30,f1=120,f2=1,f3=0,f4;
@@ -147,7 +146,7 @@ SynthDef("toggle", {
 	prob=times/tries;
 	length_time=Demand.kr(imp,0,Dseq([2,4,8,12,16,24,32]*60/bpm,inf));
 	env=EnvGen.kr(Env.new([0,1,1,0],[length_time/12,length_time*10/12,length_time/12]),imp*(LFNoise0.kr(rate).range(0,1)<prob));
-	Out.ar(out, snd*(1-env));
+	Out.ar(out, LeakDC.ar(snd*(1-env)));
 }).load(nrtServer);
 SynthDef("oneworddelay", {
     arg out=0, dur=30,f1=120,f2=1,f3,f4;
@@ -160,7 +159,7 @@ SynthDef("oneworddelay", {
     sndDelay=Pan2.ar(sndDelay,SinOsc.kr(bpm/60));
     snd=SelectX.ar(gate,[snd,sndDelay]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.0005,dur-0.001,0.0005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("sidechain", {
     arg out=0,  dur=30,f1=1,f2=1,f3,f4;
@@ -184,7 +183,7 @@ SynthDef("sidechain", {
 
     snd=sidechained;//SelectX.ar(bc,[snd,sidechained]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 SynthDef("kick", {
     arg out=0,  dur=30,f1=1,f2=1,f3,f4;
@@ -208,7 +207,7 @@ SynthDef("kick", {
 
     snd=sidechained+kick;//SelectX.ar(bc,[snd,sidechained]);
     snd = snd * EnvGen.ar(Env.new([0, 1, 1, 0], [0.005,dur-0.01,0.005]), doneAction:2);
-    Out.ar(out, snd);
+    Out.ar(out, LeakDC.ar(snd));
 }).load(nrtServer);
 
 scoreFn={

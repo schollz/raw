@@ -79,5 +79,9 @@ COPY src /root/src
 COPY go.mod /root/go.mod 
 COPY go.sum /root/go.sum 
 WORKDIR /root
-RUN go build -v
-CMD ["./raw","stemstich","--config","/data/config.toml"]
+
+# debug purposes
+COPY raw /root/raw
+#RUN /usr/local/go/bin/go build -v
+
+CMD ["/bin/sh","-c","/root/raw stemstitch --config /data/${CONFIGDIR}/config.toml"]

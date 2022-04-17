@@ -4,7 +4,8 @@ __pycache__/
 *$py.class
 test.wav
 sccode*
-
+songs 
+raw
 
 # C extensions
 *.so
