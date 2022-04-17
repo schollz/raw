@@ -207,17 +207,11 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 
 	// apply the track fx and
 	// rename the final file for each track
-	bar := progressbar.NewOptions(len(s.Tracks),
-		progressbar.OptionSetDescription("combine"),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	)
+	fmt.Print("apply fx to tracks...")
 	tracks := []string{}
 	seed := rand.Float64() * 10000000
 	log.Debugf("seed: %f", seed)
 	for _, track := range s.Tracks {
-		bar.Add(1)
 		if track.FileOut != "" {
 			if track.EffectOneWordDelay {
 				track.FileOut, err = supercollider.Effect(track.FileOut, "oneworddelay", s.Tempo)
@@ -261,13 +255,18 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 			}
 			tracks = append(tracks, newName)
 		}
+		fmt.Print(track.Name + ".")
 	}
+	fmt.Println("done.")
 
 	// make a mix
+	fmt.Print("mixing tracks...")
 	final, err := sox.Mix(tracks...)
 	if err != nil {
 		return
 	}
+	fmt.Println("done.")
+
 	os.Rename(final, path.Join(folder, "song.wav"))
 
 	// clean up everything
@@ -277,6 +276,10 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 }
 
 func (s *Song) DepopAll() (err error) {
+	fmt.Print("depopping tracks...")
+	defer func() {
+		fmt.Println("done.")
+	}()
 	// start worker group to generate the parts for each track
 	numJobs := len(s.Tracks)
 	type job struct {
@@ -304,15 +307,9 @@ func (s *Song) DepopAll() (err error) {
 		jobs <- job{tracki: tracki}
 	}
 	close(jobs)
-	bar := progressbar.NewOptions(numJobs,
-		progressbar.OptionSetDescription("depop"),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
-	)
 	for i := 0; i < numJobs; i++ {
 		r := <-results
-		bar.Add(1)
+		fmt.Print(s.Tracks[r.tracki].Name + "..")
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)
@@ -433,8 +430,8 @@ func (s *Song) RunAll() (err error) {
 		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
 	)
 	for i := 0; i < numJobs; i++ {
-		bar.Add(1)
 		r := <-results
+		bar.Add(1)
 		if r.err != nil {
 			// do something with error
 			log.Errorf("%+v: %s", r, r.err)
