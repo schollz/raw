@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -13,9 +14,14 @@ import (
 	"strconv"
 	"strings"
 
+	_ "embed"
+
 	log "github.com/schollz/logger"
 	"github.com/schollz/progressbar/v3"
 )
+
+// go:embed depop.py
+var depoppy string
 
 // TempDir is where the temporary intermediate files are held
 var TempDir = os.TempDir()
@@ -40,6 +46,7 @@ func init() {
 	if !strings.Contains(stdout, "SoX") {
 		panic("need to install sox")
 	}
+
 }
 
 func run(args ...string) (string, string, error) {
@@ -189,6 +196,21 @@ func SilencePrepend(fname string, length float64) (fname2 string, err error) {
 // FFT
 func FFT(fname string) (data string, err error) {
 	_, data, err = run("sox", fname, "-n", "stat", "-freq")
+	return
+}
+
+func Depop(fname string) (fname2 string, err error) {
+	// generate the python depopfile
+	depopfile, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return
+	}
+	depopfile.Write([]byte(depoppy))
+	depopfile.Close()
+	defer os.Remove(depopfile.Name())
+
+	fname2 = Tmpfile()
+	_, _, err = run("python3", depopfile.Name(), fname, fname2)
 	return
 }
 

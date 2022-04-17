@@ -1,6 +1,7 @@
 package song
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -199,6 +200,11 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 		return
 	}
 
+	// depopping
+	if err = s.DepopAll(); err != nil {
+		return
+	}
+
 	// apply the track fx and
 	// rename the final file for each track
 	bar := progressbar.NewOptions(len(s.Tracks),
@@ -267,6 +273,52 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 	// clean up everything
 	sox.Clean()
 	supercollider.Stop()
+	return
+}
+
+func (s *Song) DepopAll() (err error) {
+	// start worker group to generate the parts for each track
+	numJobs := len(s.Tracks)
+	type job struct {
+		tracki int
+	}
+	type result struct {
+		tracki int
+		err    error
+	}
+	jobs := make(chan job, numJobs)
+	results := make(chan result, numJobs)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func(jobs <-chan job, results chan<- result) {
+			for j := range jobs {
+				// step 3: specify the work for the worker
+				var r result
+				r.tracki = j.tracki
+				s.Tracks[j.tracki].FileOut, r.err = sox.Depop(s.Tracks[j.tracki].FileOut)
+				results <- r
+			}
+		}(jobs, results)
+	}
+	for tracki := range s.Tracks {
+		jobs <- job{tracki: tracki}
+	}
+	close(jobs)
+	bar := progressbar.NewOptions(numJobs,
+		progressbar.OptionSetDescription("depop"),
+		progressbar.OptionShowIts(),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionOnCompletion(func() { fmt.Print("\n") }),
+	)
+	for i := 0; i < numJobs; i++ {
+		r := <-results
+		bar.Add(1)
+		if r.err != nil {
+			// do something with error
+			log.Errorf("%+v: %s", r, r.err)
+			err = r.err
+		}
+	}
 	return
 }
 
