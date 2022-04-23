@@ -1,0 +1,126 @@
+Tempo = 165.0
+Bars = 112.0
+Seed = 0
+EffectTapestop=1.0
+
+[[track]]
+  Name = "chords"
+  Structure = "AACDEFG"
+  EffectToggleFilter=0.0
+  EffectOneWordDelay=false
+  Gain=-2.5
+
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn = "1/*.wav"
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.2
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+      NoSlow=true
+
+[[track]]
+  Name = "drums"
+  Structure = "ABCDEFG"
+  EffectToggleFilter=0.0
+  EffectOneWordDelay=false
+  Gain=0
+
+  [[track.part]]
+    Name = "other"
+    [track.part.ss]
+      FileIn =  "../0/*.wav"
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.1
+      ProbPitch = 0.02
+      ProbRereverb = 0.02
+      ProbReverb = 0.0
+      ProbReverse = 0.05
+      ProbSlow = 0.0
+      ProbStutter = 0.15
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = true
+
+  [[track.part]]
+    Name = "other"
+    [track.part.ss]
+      FileIn =  "0/*.wav"
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.1
+      ProbPitch = 0.0
+      ProbRereverb = 0.02
+      ProbReverb = 0.0
+      ProbReverse = 0.04
+      ProbSlow = 0.0
+      ProbStutter = 0.15
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = true
+
+[[track]]
+  Name = "melody"
+  Structure = "ABCDEFG"
+  EffectToggleFilter=0.0
+  EffectOneWordDelay=true
+  Gain=-2.5
+
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn =  "2/*.wav"
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.0
+      ProbPitch = 0.0
+      ProbRereverb = 0.0
+      ProbReverb = 0.0
+      ProbReverse = 0.0
+      ProbSlow = 0.0
+      ProbStutter = 0.1
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+      NoSlow=true
+
+
+[[track]]
+  Name = "strings"
+  Structure = "ABCDEFG"
+  EffectToggleFilter=0.0
+  EffectOneWordDelay=true
+  Gain=-2.5
+
+  [[track.part]]
+    Name = "A"
+    [track.part.ss]
+      FileIn =  "3/*.wav"
+      FilterIn = 0.0
+      FilterOut = 0.0
+      ProbJump = 0.001
+      ProbPitch = 0.0
+      ProbRereverb = 0.05
+      ProbReverb = 0.0
+      ProbReverse = 0.01
+      ProbSlow = 0.0
+      ProbStutter = 0.1
+      Sidechain = 0.0
+      SilenceAppend = 0.0
+      SilencePrepend = 0.0
+      Tapedeck = false
+      NoSlow=true
