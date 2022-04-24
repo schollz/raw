@@ -49,7 +49,7 @@ make portedplugins
 
 ## confg file
 
-see `example/config.toml` and its directory for how to structure samples for a song and add configuration. basically, the config file lets you setup the song structure for each track, and setup effects based on probabilities (0-1).
+see `config-example.toml` and its directory for how to structure samples for a song and add configuration. basically, the config file lets you setup the song structure for each track, and setup effects based on probabilities (0-1).
 
 
 ## license
