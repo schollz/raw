@@ -137,6 +137,7 @@ func (ss *SampSwap) Run() (err error) {
 			}
 		}
 	}
+	log.Debugf("original file: %s", ss.FileOriginal)
 	log.Debugf("tempo in: %f bpm", ss.TempoIn)
 	log.Debugf("beats out (requested): %f", ss.BeatsOut)
 	ss.TempoOut = ss.TempoOut * bestBPMDivision
@@ -155,7 +156,12 @@ func (ss *SampSwap) Run() (err error) {
 		panic(err)
 	}
 	beats := math.Floor(math.Round(sox.MustFloat(sox.Length(fname)) / (60 / ss.TempoIn)))
+	repeatsAdded := 0
 	for {
+		repeatsAdded++
+		if repeatsAdded > 30 {
+			panic("too many repeats added in " + ss.FileOriginal)
+		}
 		if beats >= ss.BeatsOut {
 			break
 		}
