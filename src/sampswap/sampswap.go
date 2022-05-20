@@ -160,6 +160,7 @@ func (ss *SampSwap) Run() (err error) {
 	for {
 		repeatsAdded++
 		if repeatsAdded > 30 {
+			fmt.Printf("current beats: %2.2f\n", beats)
 			panic("too many repeats added in " + ss.FileOriginal)
 		}
 		if beats >= ss.BeatsOut {

@@ -204,10 +204,10 @@ func (s *Song) Generate(folder0 ...string) (err error) {
 	}
 
 	// depopping
-	if err = s.DepopAll(); err != nil {
-		log.Error(err)
-		return
-	}
+	//if err = s.DepopAll(); err != nil {
+	//	log.Error(err)
+	//	return
+	//}
 
 	// apply the track fx and
 	// rename the final file for each track
@@ -437,6 +437,7 @@ func (s *Song) RunAll() (err error) {
 				r.parti = j.parti
 				s.Tracks[j.tracki].Parts[j.parti].SampSwap.BeatsOut = s.Tracks[j.tracki].Parts[j.parti].Length * 4
 				if s.Tracks[j.tracki].Parts[j.parti].SampSwap.BeatsOut > 0 && s.Tracks[j.tracki].Parts[j.parti].SampSwap.FileIn != "" {
+					s.Tracks[j.tracki].Parts[j.parti].SampSwap.FileOriginal = s.Tracks[j.tracki].Parts[j.parti].SampSwap.FileIn
 					r.err = s.Tracks[j.tracki].Parts[j.parti].SampSwap.Run()
 				}
 				results <- r
