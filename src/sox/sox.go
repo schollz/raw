@@ -230,14 +230,14 @@ func Norm(fname string) (fname2 string, err error) {
 // SilenceTrim trims silence around a file
 func SilenceTrim(fname string) (fname2 string, err error) {
 	fname2 = Tmpfile()
-	_, _, err = run("sox", fname, fname2, "silence", "1", "0.1", `0.025%`, "reverse", "silence", "1", "0.1", `0.25%`, "reverse")
+	_, _, err = run("sox", fname, fname2, "silence", "1", "0.1", `-50d`, "reverse", "silence", "1", "0.1", `-50d`, "reverse")
 	return
 }
 
 // SilenceTrimEnd trims silence from end of file
 func SilenceTrimEnd(fname string) (fname2 string, err error) {
 	fname2 = Tmpfile()
-	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse")
+	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `-50d`, "reverse")
 	return
 }
 
@@ -444,7 +444,7 @@ func SampleRate(fname string, srCh ...int) (fname2 string, err error) {
 // PostProcess
 func PostProcess(fname string, gain float64) (fname2 string, err error) {
 	fname2 = Tmpfile()
-	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.25%`, "reverse", "gain", fmt.Sprint(gain))
+	_, _, err = run("sox", fname, fname2, "reverse", "silence", "1", "0.1", `0.5%`, "reverse", "gain", fmt.Sprint(gain))
 	return
 }
 
