@@ -1,10 +1,12 @@
 # raw
 
-random audio workstation. basically a command-line program to generate entire songs from short sample loops.
+random audio workstation. basically a command-line program to generate entire songs from short sample loops. this software was used to create [paracosms](https://infinitedigits.bandcamp.com/album/paracosms), a new album by infinite digits.
 
 for me, making an album of music means devising a single process of making music and using that process to generate tracks. my past processes were focused on melody and harmony. for [*generations*](https://infinitedigits.bandcamp.com/album/generations) I found a process around generative chord changes. for [*18,000*](https://infinitedigits.bandcamp.com/album/18000) I used a coding framework to write small snippets for generative audio. for [*at the place*](https://infinitedigits.bandcamp.com/album/at-the-place) I tried to devise a paper-and-pen method of developing melodies. 
 
 in this current process I'm focusing on effects and structure. I plan on only using samples and trying to elevate the samples by restructuring and juxtaposed effects chains - and have its creation based entirely in a terminal. this current project is based off my other projcets [dnb.lua](https://github.com/schollz/dnb.lua), [makebreakbeat](https://github.com/schollz/makebreakbeat/), and [sampswap](https://github.com/schollz/sampswap/). this one should be better capable of cross-platformability.
+
+read more about the process on [my blog](https://schollz.com/blog/paracosms/).
 
 ## requirements
 
